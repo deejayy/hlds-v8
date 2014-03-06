@@ -19,4 +19,7 @@ Half Life Dedicated Server with Google V8 JS Engine (a metamod plugin)
 
 #### Build V8
 
+    v8# make dependencies
+    v8# make ia32.release i18nsupport=off library=shared
+
 #### Run build.sh
