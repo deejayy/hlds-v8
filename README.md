@@ -14,6 +14,9 @@ Half Life Dedicated Server with Google V8 JS Engine (a metamod plugin)
 
 #### Unpack
 
+    # tar zxfv hlsdk-2.3-p4.tar.gz
+    # tar zxfv metamod-1.20-linux.src.tar.gz
+
 #### Build V8
 
 #### Run build.sh
