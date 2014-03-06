@@ -49,4 +49,4 @@ Server log:
     
 ### Very-very WIP
 
-As you can see in the source, the JS snippet is built in and only two dllapi callbacks are used to demonstrate the conecption. Feel free to fork or contribute the project.
+As you can see in the source, the JS snippet is built in and only two dllapi callbacks are used to demonstrate the conception. Feel free to fork or contribute the project.
