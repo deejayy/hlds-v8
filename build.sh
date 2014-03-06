@@ -9,11 +9,11 @@ g++ \
 	${f} \
 	-c \
 	-m32 \
-	-I../metamod/ \
-	-I../../hlsdk/multiplayer/dlls/ \
-	-I../../hlsdk/multiplayer/common/ \
-	-I../../hlsdk/multiplayer/engine/ \
-	-I../../v8/include/ \
+	-I../metamod-1.20/metamod/ \
+	-I../hlsdk-2.3-p4/multiplayer/dlls/ \
+	-I../hlsdk-2.3-p4/multiplayer/common/ \
+	-I../hlsdk-2.3-p4/multiplayer/engine/ \
+	-I../v8/include/ \
 	-o out/${f/cpp/}o \
 	-Wno-write-strings \
 2>&1 || exit
