@@ -59,12 +59,12 @@ static META_FUNCTIONS gMetaFunctionTable = {
 // Description of plugin
 plugin_info_t Plugin_info = {
 	META_INTERFACE_VERSION,	// ifvers
-	"minimal stub",	// name
-	"1.17",	// version
-	"2003/11/15",	// date
-	"Will Day <willday@metamod.org>",	// author
-	"http://www.metamod.org/",	// url
-	"STUB",	// logtag, all caps please
+	"hlds-v8",	// name
+	"0.56",	// version
+	"2014/03/07",	// date
+	"DeeJayy <deejayy@deejayy.hu>",	// author
+	"http://deejayy.hu/",	// url
+	"HLDSV8",	// logtag, all caps please
 	PT_ANYTIME,	// (when) loadable
 	PT_ANYPAUSE,	// (when) unloadable
 };
