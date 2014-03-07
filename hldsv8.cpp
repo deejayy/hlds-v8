@@ -62,12 +62,16 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
 
 	if (fn->GetName()->ToString()->Equals(myName)) {
-		const int      fnArgc  = 3;
-		Handle<String> name    = String::NewFromUtf8(isolate, pszName);
-		Handle<String> address = String::NewFromUtf8(isolate, pszAddress);
-		Handle<String> authId  = String::NewFromUtf8(isolate, g_engfuncs.pfnGetPlayerAuthId(pEntity));
-		
-		Handle<Value>  fnArgs[fnArgc]  = { name, address, authId };
+		Handle<Object> params = Object::New(isolate);
+		params->Set(String::NewFromUtf8(isolate, "name"   ), String::NewFromUtf8(isolate, pszName));
+		params->Set(String::NewFromUtf8(isolate, "address"), String::NewFromUtf8(isolate, pszAddress));
+		params->Set(String::NewFromUtf8(isolate, "authid" ), String::NewFromUtf8(isolate, g_engfuncs.pfnGetPlayerAuthId(pEntity)));
+		params->Set(String::NewFromUtf8(isolate, "keys"   ), String::NewFromUtf8(isolate, g_engfuncs.pfnGetInfoKeyBuffer(pEntity)));
+		params->Set(String::NewFromUtf8(isolate, "uid"    ), Number::New(isolate, g_engfuncs.pfnGetPlayerUserId(pEntity)));
+		params->Set(String::NewFromUtf8(isolate, "wonid"  ), Number::New(isolate, g_engfuncs.pfnGetPlayerWONId(pEntity)));
+
+		const int      fnArgc = 1;
+		Handle<Value>  fnArgs[fnArgc]  = { params };
 
 		Handle<Value>  result  = fn->Call(context->Global(), fnArgc, fnArgs);
 	} else {
