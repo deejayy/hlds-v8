@@ -1,37 +1,3 @@
-// vi: set ts=4 sw=4 :
-// vim: set tw=75 :
-
-/*
- * Copyright (c) 2001-2003 Will Day <willday@hpgx.net>
- *
- *    This file is part of Metamod.
- *
- *    Metamod is free software; you can redistribute it and/or modify it
- *    under the terms of the GNU General Public License as published by the
- *    Free Software Foundation; either version 2 of the License, or (at
- *    your option) any later version.
- *
- *    Metamod is distributed in the hope that it will be useful, but
- *    WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    General Public License for more details.
- *
- *    You should have received a copy of the GNU General Public License
- *    along with Metamod; if not, write to the Free Software Foundation,
- *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
- *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
- *    from Valve.  If you modify this file, you may extend this exception
- *    to your version of the file, but you are not obligated to do so.  If
- *    you do not wish to do so, delete this exception statement from your
- *    version.
- *
- */
-
 #include <extdll.h>
 
 #include <dllapi.h>
@@ -40,66 +6,66 @@
 
 static DLL_FUNCTIONS gFunctionTable = 
 {
-	NULL,					// pfnGameInit
-	NULL,					// pfnSpawn
-	NULL,					// pfnThink
-	NULL,					// pfnUse
-	NULL,					// pfnTouch
-	NULL,					// pfnBlocked
-	NULL,					// pfnKeyValue
-	NULL,					// pfnSave
-	NULL,					// pfnRestore
-	NULL,					// pfnSetAbsBox
+	&v8_GameInit,					// pfnGameInit
+	&v8_Spawn,						// pfnSpawn
+	&v8_Think,						// pfnThink
+	&v8_Use,						// pfnUse
+	&v8_Touch,						// pfnTouch
+	&v8_Blocked,					// pfnBlocked
+	&v8_KeyValue,					// pfnKeyValue
+	&v8_Save,						// pfnSave
+	&v8_Restore,					// pfnRestore
+	&v8_SetAbsBox,					// pfnSetAbsBox
 
-	NULL,					// pfnSaveWriteFields
-	NULL,					// pfnSaveReadFields
+	&v8_SaveWriteFields,			// pfnSaveWriteFields
+	&v8_SaveReadFields,				// pfnSaveReadFields
 
-	NULL,					// pfnSaveGlobalState
-	NULL,					// pfnRestoreGlobalState
-	NULL,					// pfnResetGlobalState
+	&v8_SaveGlobalState,			// pfnSaveGlobalState
+	&v8_RestoreGlobalState,			// pfnRestoreGlobalState
+	&v8_ResetGlobalState,			// pfnResetGlobalState
 
-	&v8_ClientConnect,		// pfnClientConnect
-	NULL,					// pfnClientDisconnect
-	NULL,					// pfnClientKill
-	NULL,					// pfnClientPutInServer
-	NULL,					// pfnClientCommand
-	NULL,					// pfnClientUserInfoChanged
-	&v8_ServerActivate,		// pfnServerActivate
-	NULL,					// pfnServerDeactivate
+	&v8_ClientConnect,				// pfnClientConnect
+	&v8_ClientDisconnect,			// pfnClientDisconnect
+	&v8_ClientKill,					// pfnClientKill
+	&v8_ClientPutInServer,			// pfnClientPutInServer
+	&v8_ClientCommand,				// pfnClientCommand
+	&v8_ClientUserInfoChanged,		// pfnClientUserInfoChanged
+	&v8_ServerActivate,				// pfnServerActivate
+	&v8_ServerDeactivate,			// pfnServerDeactivate
 
-	NULL,					// pfnPlayerPreThink
-	NULL,					// pfnPlayerPostThink
+	&v8_PlayerPreThink,				// pfnPlayerPreThink
+	&v8_PlayerPostThink,			// pfnPlayerPostThink
 
-	NULL,					// pfnStartFrame
-	NULL,					// pfnParmsNewLevel
-	NULL,					// pfnParmsChangeLevel
+	&v8_StartFrame,					// pfnStartFrame
+	&v8_ParmsNewLevel,				// pfnParmsNewLevel
+	&v8_ParmsChangeLevel,			// pfnParmsChangeLevel
 
-	NULL,					// pfnGetGameDescription
-	NULL,					// pfnPlayerCustomization
+	&v8_GetGameDescription,			// pfnGetGameDescription
+	&v8_PlayerCustomization,		// pfnPlayerCustomization
 
-	NULL,					// pfnSpectatorConnect
-	NULL,					// pfnSpectatorDisconnect
-	NULL,					// pfnSpectatorThink
+	&v8_SpectatorConnect,			// pfnSpectatorConnect
+	&v8_SpectatorDisconnect,		// pfnSpectatorDisconnect
+	&v8_SpectatorThink,				// pfnSpectatorThink
 	
-	NULL,					// pfnSys_Error
+	&v8_Sys_Error,					// pfnSys_Error
 
-	NULL,					// pfnPM_Move
-	NULL,					// pfnPM_Init
-	NULL,					// pfnPM_FindTextureType
+	&v8_PM_Move,					// pfnPM_Move
+	&v8_PM_Init,					// pfnPM_Init
+	&v8_PM_FindTextureType,			// pfnPM_FindTextureType
 	
-	NULL,					// pfnSetupVisibility
-	NULL,					// pfnUpdateClientData
-	NULL,					// pfnAddToFullPack
-	NULL,					// pfnCreateBaseline
-	NULL,					// pfnRegisterEncoders
-	NULL,					// pfnGetWeaponData
-	NULL,					// pfnCmdStart
-	NULL,					// pfnCmdEnd
-	NULL,					// pfnConnectionlessPacket
-	NULL,					// pfnGetHullBounds
-	NULL,					// pfnCreateInstancedBaselines
-	NULL,					// pfnInconsistentFile
-	NULL,					// pfnAllowLagCompensation
+	&v8_SetupVisibility,			// pfnSetupVisibility
+	&v8_UpdateClientData,			// pfnUpdateClientData
+	&v8_AddToFullPack,				// pfnAddToFullPack
+	&v8_CreateBaseline,				// pfnCreateBaseline
+	&v8_RegisterEncoders,			// pfnRegisterEncoders
+	&v8_GetWeaponData,				// pfnGetWeaponData
+	&v8_CmdStart,					// pfnCmdStart
+	&v8_CmdEnd,						// pfnCmdEnd
+	&v8_ConnectionlessPacket,		// pfnConnectionlessPacket
+	&v8_GetHullBounds,				// pfnGetHullBounds
+	&v8_CreateInstancedBaselines,	// pfnCreateInstancedBaselines
+	&v8_InconsistentFile,			// pfnInconsistentFile
+	&v8_AllowLagCompensation,		// pfnAllowLagCompensation
 };
 
 C_DLLEXPORT int GetEntityAPI2(DLL_FUNCTIONS *pFunctionTable, 
