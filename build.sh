@@ -11,6 +11,7 @@ g++ \
 	-m32 \
 	-I../metamod-1.20/metamod/ \
 	-I../hlsdk-2.3-p4/multiplayer/dlls/ \
+	-I../hlsdk-2.3-p4/multiplayer/pm_shared/ \
 	-I../hlsdk-2.3-p4/multiplayer/common/ \
 	-I../hlsdk-2.3-p4/multiplayer/engine/ \
 	-I../v8/include/ \
