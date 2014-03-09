@@ -28,7 +28,6 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 	args.GetReturnValue().Set(Null(isolate));
 }
 
-
 // very first callback, runs twice: before and after logswitch
 const char *v8_GetGameDescription () {
 	SET_META_RESULT(MRES_IGNORED);
@@ -83,18 +82,18 @@ void v8_ResetGlobalState () {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// very frequent at startup (400), first callback after logswitch, nothing is initialized
+// very frequent at startup (400), first callback after logswitch
 void v8_KeyValue (edict_t *pentKeyvalue, KeyValueData *pkvd) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// very frequent at startup (400), second callback after logswitch, nothing is initialized
+// very frequent at startup (400), second callback after logswitch
 int v8_Spawn (edict_t *pent) {
 	SET_META_RESULT(MRES_IGNORED);
 	return 1;
 }
 
-// frequent at startup (50), very frequent in-game (v8_StartFrame * 4!) third callback after logswitch, nothing is initialized
+// frequent at startup (50), very frequent in-game (v8_StartFrame * 4!) third callback after logswitch
 void v8_SetAbsBox (edict_t *pent) {
 	SET_META_RESULT(MRES_IGNORED);
 }
@@ -324,7 +323,38 @@ void v8_ClientPutInServer (edict_t *pEntity) {
 }
 
 void v8_ClientCommand (edict_t *pEntity) {
-	ALERT(at_logged, "v8_ClientCommand\n");
+	Context::Scope context_scope(context);
+
+	Handle<String>   myName = String::NewFromUtf8(isolate, "ClientCommand");
+	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
+
+	if (fn->GetName()->ToString()->Equals(myName)) {
+		Handle<Object> params = Object::New(isolate);
+
+		int argc = g_engfuncs.pfnCmd_Argc();
+
+		params->Set(String::NewFromUtf8(isolate, "argc"), Number::New(isolate, argc));
+
+		Handle<Array> argv = Array::New(isolate, argc);
+		if (argc > 0) {
+			if (argc > 1) {
+				params->Set(String::NewFromUtf8(isolate, "args"), String::NewFromUtf8(isolate, g_engfuncs.pfnCmd_Args()));
+			}
+			for (int i = 0; i < argc; i++) {
+				ALERT(at_logged, "i: %d\n", i);
+				argv->Set(i, String::NewFromUtf8(isolate, g_engfuncs.pfnCmd_Argv(i)));
+			}
+		}
+		params->Set(String::NewFromUtf8(isolate, "argv"), argv);
+
+		const int      fnArgc = 1;
+		Handle<Value>  fnArgs[fnArgc]  = { params };
+
+		Handle<Value>  result  = fn->Call(context->Global(), fnArgc, fnArgs);
+	} else {
+		ALERT(at_logged, "[HLDSV8] No ClientCommand defined in script!\n");
+	}
+
 	SET_META_RESULT(MRES_IGNORED);
 }
 
