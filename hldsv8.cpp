@@ -28,20 +28,45 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 	args.GetReturnValue().Set(Null(isolate));
 }
 
+edict_t *entities[33];
+
 // very first callback, runs twice: before and after logswitch
 const char *v8_GetGameDescription () {
 	SET_META_RESULT(MRES_IGNORED);
 	return "v8 gamedesc";
 }
 
+void v8c_GetPlayerName(const v8::FunctionCallbackInfo<Value> &args) {
+	Handle<Value> result = Null(isolate);
+
+	if (args.Length() > 0) {
+		int id = args[0]->ToInt32()->Value();
+		if (id) {
+			if (entities[id]) {
+				result = String::NewFromUtf8(isolate, STRING(entities[id]->v.netname));
+			} else {
+				ALERT(at_logged, "v8c_GetPlayerName: invalid entity (disconnected?)\n");
+			}
+		}
+	} else {
+		ALERT(at_logged, "v8c_GetPlayerName: missing arguments\n");
+	}
+
+	args.GetReturnValue().Set(result);
+}
+
 // second callback
 void v8_GameInit () {
 	Handle<ObjectTemplate> globalObject = ObjectTemplate::New();
 	Handle<ObjectTemplate> console      = ObjectTemplate::New();
+	Handle<ObjectTemplate> v8Common     = ObjectTemplate::New();
 
 	globalObject->SetAccessor(String::NewFromUtf8(isolate, "window" ), jsWindowObjectAccessor);
 	globalObject->Set        (String::NewFromUtf8(isolate, "console"), console);
 	console     ->Set        (String::NewFromUtf8(isolate, "log"    ), FunctionTemplate::New(isolate, jsConsolePrint));
+
+	globalObject->Set        (String::NewFromUtf8(isolate, "v8"), v8Common);
+	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerName"), FunctionTemplate::New(isolate, v8c_GetPlayerName));
 
 	context = Context::New(isolate, NULL, globalObject);
 	Context::Scope context_scope(context);
@@ -174,9 +199,9 @@ void v8_CmdStart (const edict_t *player, const struct usercmd_s *cmd, unsigned i
 	if (fn->GetName()->ToString()->Equals(myName)) {
 		Handle<Object> params = Object::New(isolate);
 
-		entvars_t *pev = (entvars_t *)&player->v;
-		CBasePlayer *pl = (CBasePlayer*)CBasePlayer::Instance(pev);
 		usercmd_t *command = (usercmd_t *)cmd;
+
+		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(player)));
 
 		Handle<Object> viewangles = Object::New(isolate);
 		viewangles->Set(String::NewFromUtf8(isolate, "x"), Number::New(isolate, command->viewangles[0]));
@@ -287,8 +312,11 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 	Handle<String>   myName = String::NewFromUtf8(isolate, "ClientConnect");
 	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
 
+	entities[ENTINDEX(pEntity)] = pEntity;
+
 	if (fn->GetName()->ToString()->Equals(myName)) {
 		Handle<Object> params = Object::New(isolate);
+		params->Set(String::NewFromUtf8(isolate, "id"     ), Number::New(isolate, ENTINDEX(pEntity)));
 		params->Set(String::NewFromUtf8(isolate, "name"   ), String::NewFromUtf8(isolate, pszName));
 		params->Set(String::NewFromUtf8(isolate, "address"), String::NewFromUtf8(isolate, pszAddress));
 		params->Set(String::NewFromUtf8(isolate, "authid" ), String::NewFromUtf8(isolate, g_engfuncs.pfnGetPlayerAuthId(pEntity)));
@@ -308,6 +336,7 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 }
 
 void v8_ClientDisconnect (edict_t *pEntity) {
+	entities[ENTINDEX(pEntity)] = nil;
 	ALERT(at_logged, "v8_ClientDisconnect\n");
 	SET_META_RESULT(MRES_IGNORED);
 }
@@ -333,7 +362,7 @@ void v8_ClientCommand (edict_t *pEntity) {
 
 		int argc = g_engfuncs.pfnCmd_Argc();
 
-		params->Set(String::NewFromUtf8(isolate, "argc"), Number::New(isolate, argc));
+		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
 
 		Handle<Array> argv = Array::New(isolate, argc);
 		if (argc > 0) {
@@ -341,7 +370,6 @@ void v8_ClientCommand (edict_t *pEntity) {
 				params->Set(String::NewFromUtf8(isolate, "args"), String::NewFromUtf8(isolate, g_engfuncs.pfnCmd_Args()));
 			}
 			for (int i = 0; i < argc; i++) {
-				ALERT(at_logged, "i: %d\n", i);
 				argv->Set(i, String::NewFromUtf8(isolate, g_engfuncs.pfnCmd_Argv(i)));
 			}
 		}
