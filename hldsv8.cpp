@@ -30,12 +30,6 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 
 edict_t *entities[33];
 
-// very first callback, runs twice: before and after logswitch
-const char *v8_GetGameDescription () {
-	SET_META_RESULT(MRES_IGNORED);
-	return "v8 gamedesc";
-}
-
 void v8c_GetPlayerName(const v8::FunctionCallbackInfo<Value> &args) {
 	Handle<Value> result = Null(isolate);
 
@@ -53,6 +47,12 @@ void v8c_GetPlayerName(const v8::FunctionCallbackInfo<Value> &args) {
 	}
 
 	args.GetReturnValue().Set(result);
+}
+
+// very first callback, runs twice: before and after logswitch
+const char *v8_GetGameDescription () {
+	SET_META_RESULT(MRES_IGNORED);
+	return "v8 gamedesc";
 }
 
 // second callback
@@ -336,7 +336,7 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 }
 
 void v8_ClientDisconnect (edict_t *pEntity) {
-	entities[ENTINDEX(pEntity)] = nil;
+	entities[ENTINDEX(pEntity)] = NULL;
 	ALERT(at_logged, "v8_ClientDisconnect\n");
 	SET_META_RESULT(MRES_IGNORED);
 }
@@ -353,6 +353,7 @@ void v8_ClientPutInServer (edict_t *pEntity) {
 
 void v8_ClientCommand (edict_t *pEntity) {
 	Context::Scope context_scope(context);
+	META_RES MRES = MRES_IGNORED; // meta result
 
 	Handle<String>   myName = String::NewFromUtf8(isolate, "ClientCommand");
 	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
@@ -379,11 +380,14 @@ void v8_ClientCommand (edict_t *pEntity) {
 		Handle<Value>  fnArgs[fnArgc]  = { params };
 
 		Handle<Value>  result  = fn->Call(context->Global(), fnArgc, fnArgs);
+		if (int meta_res = result->ToInt32()->Value()) {
+			MRES = META_RES(meta_res);
+		}
 	} else {
 		ALERT(at_logged, "[HLDSV8] No ClientCommand defined in script!\n");
 	}
 
-	SET_META_RESULT(MRES_IGNORED);
+	SET_META_RESULT(MRES);
 }
 
 void v8_ClientUserInfoChanged (edict_t *pEntity, char *infobuffer) {
