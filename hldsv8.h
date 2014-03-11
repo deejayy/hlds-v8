@@ -1,5 +1,3 @@
-extern "C" { void *__dso_handle = NULL; }
-
 extern void         v8_GameInit                  ( void );
 extern int          v8_Spawn                     ( edict_t *pent );
 extern void         v8_Think                     ( edict_t *pent );
@@ -50,3 +48,9 @@ extern int          v8_GetHullBounds             ( int hullnumber, float *mins, 
 extern void         v8_CreateInstancedBaselines  ( void );
 extern int          v8_InconsistentFile          ( const struct edict_s *player, const char *filename, char *disconnect_message );
 extern int          v8_AllowLagCompensation      ( void );
+
+#include <v8.h>
+
+extern v8::Isolate* isolate;
+extern v8::Handle<v8::Context> context;
+extern edict_t *entities[33];
