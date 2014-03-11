@@ -46,7 +46,7 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 }
 
 /**
- * Get player's name
+ * V8 Common: Get player's name
  *
  * @params FunctionCallbackInfo args virtual arguments: id
  *
@@ -210,8 +210,8 @@ void v8_ServerActivate (edict_t *pEdictList, int edictCount, int clientMax) {
  * @param entity_state_s baseline         entity state
  * @param edict_s        entity           entity
  * @param int            playermodelindex player model index
- * @param vec3_t         player_mins      
- * @param vec3_t         player_maxs      
+ * @param vec3_t         player_mins
+ * @param vec3_t         player_maxs
  *
  * @return void
  */
