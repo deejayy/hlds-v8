@@ -1,8 +1,8 @@
 #!/bin/bash
 
-mkdir out
-rm out/hldsv8_i386.so
-rm out/*.o
+mkdir out 2> /dev/null
+rm out/hldsv8_i386.so 2> /dev/null
+rm out/*.o 2> /dev/null
 
 for f in *.cpp; do
 g++ \

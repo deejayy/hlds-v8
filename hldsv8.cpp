@@ -9,6 +9,8 @@
 #include "common.h"
 #include "hldsv8_common.h"
 
+// #define v8debug
+
 using namespace v8;
 
 Isolate* isolate = Isolate::GetCurrent();
@@ -19,8 +21,22 @@ Handle<Context> context;
  * Client list, maxplayers + 1
  */
 edict_t *entities[33];
+
 int maxPlayers;
 int maxEntities;
+
+/**
+ * Callback define status
+ * int d<callback function basename>:
+ * 0: n/a
+ * 1: not defined
+ * 2: defined
+ */
+typedef struct {
+	int dClientConnect;
+} cbDefines_t;
+
+static cbDefines_t cbDefines = { 0 };
 
 /**
  * First callback before the world has spawned, and the game rules initialized
@@ -292,8 +308,10 @@ void v8_CmdStart (const edict_t *player, const struct usercmd_s *cmd, unsigned i
 		Handle<Value>  fnArgs[fnArgc]  = { params };
 
 		Handle<Value>  result  = fn->Call(context->Global(), fnArgc, fnArgs);
+#ifdef v8debug
 	} else {
 		ALERT(at_logged, "[HLDSV8] No CmdStart defined in script!\n");
+#endif
 	}
 
 	SET_META_RESULT(MRES_IGNORED);
@@ -351,14 +369,22 @@ void v8_RestoreGlobalState (SAVERESTOREDATA *) {
 }
 
 qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ]) {
+	entities[ENTINDEX(pEntity)] = pEntity;
+
 	Context::Scope context_scope(context);
 
 	Handle<String>   myName = String::NewFromUtf8(isolate, "ClientConnect");
 	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
 
-	entities[ENTINDEX(pEntity)] = pEntity;
+	if (!cbDefines.dClientConnect) {
+		if (fn->GetName()->ToString()->Equals(myName)) {
+			cbDefines.dClientConnect = 2;
+		} else {
+			cbDefines.dClientConnect = 1;
+		}
+	}
 
-	if (fn->GetName()->ToString()->Equals(myName)) {
+	if (cbDefines.dClientConnect == 2) {
 		Handle<Object> params = Object::New(isolate);
 		params->Set(String::NewFromUtf8(isolate, "id"     ), Number::New(isolate, ENTINDEX(pEntity)));
 		params->Set(String::NewFromUtf8(isolate, "name"   ), String::NewFromUtf8(isolate, pszName));
@@ -368,8 +394,10 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 		Handle<Value>  fnArgs[fnArgc]  = { params };
 
 		Handle<Value>  result  = fn->Call(context->Global(), fnArgc, fnArgs);
+#ifdef v8debug
 	} else {
 		ALERT(at_logged, "[HLDSV8] No ClientConnect defined in script!\n");
+#endif
 	}
 
 	SET_META_RESULT(MRES_IGNORED);
@@ -392,7 +420,7 @@ void v8_ClientPutInServer (edict_t *pEntity) {
 
 void v8_ClientCommand (edict_t *pEntity) {
 	Context::Scope context_scope(context);
-	META_RES MRES = MRES_IGNORED; // meta result
+	META_RES MRES = MRES_IGNORED;
 
 	Handle<String>   myName = String::NewFromUtf8(isolate, "ClientCommand");
 	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
@@ -422,8 +450,10 @@ void v8_ClientCommand (edict_t *pEntity) {
 		if (int meta_res = result->ToInt32()->Value()) {
 			MRES = META_RES(meta_res);
 		}
+#ifdef v8debug
 	} else {
 		ALERT(at_logged, "[HLDSV8] No ClientCommand defined in script!\n");
+#endif
 	}
 
 	SET_META_RESULT(MRES);

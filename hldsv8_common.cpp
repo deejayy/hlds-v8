@@ -145,6 +145,57 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 	args.GetReturnValue().Set(Null(isolate));
 }
 
+void ReportException(Isolate* isolate, TryCatch* try_catch) {
+	HandleScope handle_scope(isolate);
+	String::Utf8Value exception(try_catch->Exception()->ToString());
+	Handle<Message> message = try_catch->Message();
+	if (message.IsEmpty()) {
+		// V8 didn't provide any extra information about this error; just
+		// print the exception.
+		ALERT(at_logged, "[HLDSV8] %s\n", *exception);
+	} else {
+		// Print (filename):(line number): (message).
+		String::Utf8Value filename(message->GetScriptResourceName());
+		int linenum = message->GetLineNumber();
+		ALERT(at_logged, "[HLDSV8] %s:%i: %s\n", *filename, linenum, *exception);
+		// Print line of source code.
+		String::Utf8Value sourceline(message->GetSourceLine());
+		ALERT(at_logged, "[HLDSV8] %s\n", *sourceline);
+		String::Utf8Value stack_trace(try_catch->StackTrace());
+		if (stack_trace.length() > 0) {
+			ALERT(at_logged, "[HLDSV8] %s\n", *stack_trace);
+		}
+	}
+}
+
+bool ExecuteString(Isolate* isolate, Handle<String> source, Handle<Value> name, bool print_result, bool report_exceptions) {
+	HandleScope handle_scope(isolate);
+	TryCatch try_catch;
+	Handle<Script> script = Script::Compile(source, name);
+	if (script.IsEmpty()) {
+		// Print errors that happened during compilation.
+		if (report_exceptions)
+			ReportException(isolate, &try_catch);
+		return false;
+	} else {
+		Handle<Value> result = script->Run();
+		if (result.IsEmpty()) {
+			// Print errors that happened during execution.
+			if (report_exceptions)
+				ReportException(isolate, &try_catch);
+			return false;
+		} else {
+			if (print_result && !result->IsUndefined()) {
+				// If all went well and the result wasn't undefined then print
+				// the returned value.
+				String::Utf8Value str(result);
+				ALERT(at_logged, "[HLDSV8] %s\n", *str);
+			}
+			return true;
+		}
+	}
+}
+
 /**
  * Initialize v8 js engine
  *
@@ -173,12 +224,25 @@ void jsInitialize()
 	char* scriptSource = fileReader("/home/cstrike/inst/debug/cstrike/plugins/hldsv8/scripts/test.js");
 
 	if (scriptSource != NULL) {
+		if (!ExecuteString(isolate, String::NewFromUtf8(isolate, scriptSource), String::NewFromUtf8(isolate, "test.js"), true, true)) {
+			ALERT(at_logged, "[HLDSV8] Engine Started with errors!\n");
+		}
+/*
 		Handle<String> source = String::NewFromUtf8(isolate, scriptSource);
 		Handle<Script> script = Script::Compile(source);
+
+		TryCatch try_catch;
+		if (script.IsEmpty()) {
+			assert(try_catch.HasCaught());
+			String::Utf8Value exception(try_catch->Exception());
+			const char* exception_string = ToCString(exception);
+			
+		}
+
 		Handle<Value>  result = script->Run();
 		String::Utf8Value utf8(result);
+*/
 
-		ALERT(at_logged, "[HLDSV8] Engine Started. (%s)\n", *utf8);
 	} else {
 		ALERT(at_logged, "[HLDSV8] Engine failed to start, no script\n");
 	}
