@@ -145,6 +145,14 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 	args.GetReturnValue().Set(Null(isolate));
 }
 
+/**
+ * Report an exception from script compiling
+ *
+ * @param Isolate  isolate
+ * @param TryCatch try_catch
+ *
+ * @return void
+ */
 void ReportException(Isolate* isolate, TryCatch* try_catch) {
 	HandleScope handle_scope(isolate);
 	String::Utf8Value exception(try_catch->Exception()->ToString());
@@ -168,6 +176,15 @@ void ReportException(Isolate* isolate, TryCatch* try_catch) {
 	}
 }
 
+/**
+ * Execute JS snippet
+ *
+ * @param Isolate        isolate
+ * @param Handle<String> source            js code
+ * @param Handle<Value>  name              script name
+ * @param bool           print_result      print result?
+ * @param bool           report_exceptions call exception reporting on compilation / runtime exceptions
+ */
 bool ExecuteString(Isolate* isolate, Handle<String> source, Handle<Value> name, bool print_result, bool report_exceptions) {
 	HandleScope handle_scope(isolate);
 	TryCatch try_catch;
@@ -227,22 +244,6 @@ void jsInitialize()
 		if (!ExecuteString(isolate, String::NewFromUtf8(isolate, scriptSource), String::NewFromUtf8(isolate, "test.js"), true, true)) {
 			ALERT(at_logged, "[HLDSV8] Engine Started with errors!\n");
 		}
-/*
-		Handle<String> source = String::NewFromUtf8(isolate, scriptSource);
-		Handle<Script> script = Script::Compile(source);
-
-		TryCatch try_catch;
-		if (script.IsEmpty()) {
-			assert(try_catch.HasCaught());
-			String::Utf8Value exception(try_catch->Exception());
-			const char* exception_string = ToCString(exception);
-			
-		}
-
-		Handle<Value>  result = script->Run();
-		String::Utf8Value utf8(result);
-*/
-
 	} else {
 		ALERT(at_logged, "[HLDSV8] Engine failed to start, no script\n");
 	}
