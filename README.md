@@ -24,9 +24,9 @@ Half Life Dedicated Server with Google V8 JS Engine (a metamod plugin)
 
 Installing the package provided by your linux distro could satisfy the dependecy. Eg. ```apt-get install libv8-dev```.
 
-#### Modify hlds source
+#### Modify hlsdk source
 
-Compiling HLDS-V8 with untouched hlds will throw an error message:
+Compiling HLDS-V8 with untouched hlsdk will throw an error message:
 
     ... error: extra qualification ‘CBasePlayer::’ on member ‘TabulateAmmo’ [-fpermissive]
 
