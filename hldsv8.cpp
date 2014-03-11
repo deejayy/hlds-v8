@@ -46,6 +46,31 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 }
 
 /**
+ * V8 Common: Check whether args[id] is a valid client entity
+ *
+ * @params FunctionCallbackInfo args virtual arguments: id
+ *
+ * @return bool
+ */
+int v8c_CheckClient(const v8::FunctionCallbackInfo<Value> &args, const char* funcName)
+{
+	if (args.Length() > 0) {
+		int id = args[0]->ToInt32()->Value();
+		if (id) {
+			if (entities[id]) {
+				return id;
+			} else {
+				ALERT(at_logged, "%s: invalid entity (disconnected?)\n", funcName);
+			}
+		}
+	} else {
+		ALERT(at_logged, "%s: missing arguments\n", funcName);
+	}
+
+	return 0;
+}
+
+/**
  * V8 Common: Get player's name
  *
  * @params FunctionCallbackInfo args virtual arguments: id
@@ -55,17 +80,76 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 void v8c_GetPlayerName(const v8::FunctionCallbackInfo<Value> &args) {
 	Handle<Value> result = Null(isolate);
 
-	if (args.Length() > 0) {
-		int id = args[0]->ToInt32()->Value();
-		if (id) {
-			if (entities[id]) {
-				result = String::NewFromUtf8(isolate, STRING(entities[id]->v.netname));
-			} else {
-				ALERT(at_logged, "v8c_GetPlayerName: invalid entity (disconnected?)\n");
-			}
-		}
-	} else {
-		ALERT(at_logged, "v8c_GetPlayerName: missing arguments\n");
+	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
+		result = String::NewFromUtf8(isolate, STRING(entities[id]->v.netname));
+	}
+
+	args.GetReturnValue().Set(result);
+}
+
+/**
+ * V8 Common: Get player's auth id (steam id)
+ *
+ * @params FunctionCallbackInfo args virtual arguments: id
+ *
+ * @return v8::String
+ */
+void v8c_GetPlayerAuthId(const v8::FunctionCallbackInfo<Value> &args) {
+	Handle<Value> result = Null(isolate);
+
+	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
+		result = String::NewFromUtf8(isolate, g_engfuncs.pfnGetPlayerAuthId(entities[id]));
+	}
+
+	args.GetReturnValue().Set(result);
+}
+
+/**
+ * V8 Common: Get player's info key buffer (\key\value...)
+ *
+ * @params FunctionCallbackInfo args virtual arguments: id
+ *
+ * @return v8::String
+ */
+void v8c_GetPlayerInfoKeyBuffer(const v8::FunctionCallbackInfo<Value> &args) {
+	Handle<Value> result = Null(isolate);
+
+	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
+		result = String::NewFromUtf8(isolate, g_engfuncs.pfnGetInfoKeyBuffer(entities[id]));
+	}
+
+	args.GetReturnValue().Set(result);
+}
+
+/**
+ * V8 Common: Get player's user id (#uid)
+ *
+ * @params FunctionCallbackInfo args virtual arguments: id
+ *
+ * @return v8::String
+ */
+void v8c_GetPlayerUserId(const v8::FunctionCallbackInfo<Value> &args) {
+	Handle<Value> result = Null(isolate);
+
+	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
+		result = Number::New(isolate, g_engfuncs.pfnGetPlayerUserId(entities[id]));
+	}
+
+	args.GetReturnValue().Set(result);
+}
+
+/**
+ * V8 Common: Get player's WON id
+ *
+ * @params FunctionCallbackInfo args virtual arguments: id
+ *
+ * @return v8::String
+ */
+void v8c_GetPlayerWONId(const v8::FunctionCallbackInfo<Value> &args) {
+	Handle<Value> result = Null(isolate);
+
+	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
+		result = Number::New(isolate, g_engfuncs.pfnGetPlayerWONId(entities[id]));
 	}
 
 	args.GetReturnValue().Set(result);
@@ -97,7 +181,11 @@ void v8_GameInit () {
 	console     ->Set        (String::NewFromUtf8(isolate, "log"    ), FunctionTemplate::New(isolate, jsConsolePrint));
 
 	globalObject->Set        (String::NewFromUtf8(isolate, "v8"), v8Common);
-	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerName"), FunctionTemplate::New(isolate, v8c_GetPlayerName));
+	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerName"         ), FunctionTemplate::New(isolate, v8c_GetPlayerName));
+	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerUserId"       ), FunctionTemplate::New(isolate, v8c_GetPlayerUserId));
+	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerAuthId"       ), FunctionTemplate::New(isolate, v8c_GetPlayerAuthId));
+	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerInfoKeyBuffer"), FunctionTemplate::New(isolate, v8c_GetPlayerInfoKeyBuffer));
+	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerWONId"        ), FunctionTemplate::New(isolate, v8c_GetPlayerWONId));
 
 	context = Context::New(isolate, NULL, globalObject);
 	Context::Scope context_scope(context);
@@ -438,10 +526,6 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 		params->Set(String::NewFromUtf8(isolate, "id"     ), Number::New(isolate, ENTINDEX(pEntity)));
 		params->Set(String::NewFromUtf8(isolate, "name"   ), String::NewFromUtf8(isolate, pszName));
 		params->Set(String::NewFromUtf8(isolate, "address"), String::NewFromUtf8(isolate, pszAddress));
-		params->Set(String::NewFromUtf8(isolate, "authid" ), String::NewFromUtf8(isolate, g_engfuncs.pfnGetPlayerAuthId(pEntity)));
-		params->Set(String::NewFromUtf8(isolate, "keys"   ), String::NewFromUtf8(isolate, g_engfuncs.pfnGetInfoKeyBuffer(pEntity)));
-		params->Set(String::NewFromUtf8(isolate, "uid"    ), Number::New(isolate, g_engfuncs.pfnGetPlayerUserId(pEntity)));
-		params->Set(String::NewFromUtf8(isolate, "wonid"  ), Number::New(isolate, g_engfuncs.pfnGetPlayerWONId(pEntity)));
 
 		const int      fnArgc = 1;
 		Handle<Value>  fnArgs[fnArgc]  = { params };
