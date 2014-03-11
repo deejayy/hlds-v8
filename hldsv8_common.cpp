@@ -8,6 +8,7 @@
 
 #include "common.h"
 #include "hldsv8.h"
+#include "hldsv8_shared.h"
 
 using namespace v8;
 
@@ -120,6 +121,55 @@ void v8c_GetPlayerWONId(const v8::FunctionCallbackInfo<Value> &args) {
 
 	args.GetReturnValue().Set(result);
 }
+
+/**
+ * Check whether a callback is defined in context
+ *
+ * @param char* name function name
+ *
+ * @return int CB_*
+ */
+int v8c_CheckCallbackIsDefined(const char *name)
+{
+	int result = CB_NA;
+
+	Context::Scope context_scope(context);
+
+	Handle<String>   myName = String::NewFromUtf8(isolate, name);
+	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
+
+	if (fn->GetName()->ToString()->Equals(myName)) {
+		result = CB_DEFINED;
+	} else {
+		result = CB_UNDEFINED;
+	}
+
+	return result;
+}
+
+/**
+ * Universal callback with params
+ *
+ * @param char*          name   function name
+ * @param Handle<Object> params js object with arguments
+ *
+ * @return Handle<Value>
+ */
+Handle<Value> v8c_UCallback(const char *name, Handle<Object> params)
+{
+	Context::Scope context_scope(context);
+
+	Handle<String>   myName = String::NewFromUtf8(isolate, name);
+	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
+
+	const int      fnArgc = 1;
+	Handle<Value>  fnArgs[fnArgc]  = { params };
+
+	Handle<Value>  result  = fn->Call(context->Global(), fnArgc, fnArgs);
+
+	return result;
+}
+
 
 /**
  * Global JS window object

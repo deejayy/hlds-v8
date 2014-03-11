@@ -8,6 +8,7 @@
 
 #include "common.h"
 #include "hldsv8_common.h"
+#include "hldsv8_shared.h"
 
 // #define v8debug
 
@@ -24,12 +25,6 @@ edict_t *entities[33];
 
 int maxPlayers;
 int maxEntities;
-
-enum {
-	CB_NA = 0,
-	CB_UNDEFINED,
-	CB_DEFINED
-};
 
 /**
  * Callback define status
@@ -378,31 +373,23 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 	entities[ENTINDEX(pEntity)] = pEntity;
 
 	Context::Scope context_scope(context);
-
-	Handle<String>   myName = String::NewFromUtf8(isolate, "ClientConnect");
-	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
+	const char* name = "ClientConnect";
 
 	if (!cbDefines.dClientConnect) {
-		if (fn->GetName()->ToString()->Equals(myName)) {
-			cbDefines.dClientConnect = CB_DEFINED;
-		} else {
-			cbDefines.dClientConnect = CB_UNDEFINED;
-		}
+		cbDefines.dClientConnect = v8c_CheckCallbackIsDefined(name);
 	}
 
 	if (cbDefines.dClientConnect == CB_DEFINED) {
+
 		Handle<Object> params = Object::New(isolate);
 		params->Set(String::NewFromUtf8(isolate, "id"     ), Number::New(isolate, ENTINDEX(pEntity)));
 		params->Set(String::NewFromUtf8(isolate, "name"   ), String::NewFromUtf8(isolate, pszName));
 		params->Set(String::NewFromUtf8(isolate, "address"), String::NewFromUtf8(isolate, pszAddress));
 
-		const int      fnArgc = 1;
-		Handle<Value>  fnArgs[fnArgc]  = { params };
-
-		Handle<Value>  result  = fn->Call(context->Global(), fnArgc, fnArgs);
+		Handle<Value>  result  = v8c_UCallback(name, params);
 #ifdef v8debug
 	} else {
-		ALERT(at_logged, "[HLDSV8] No ClientConnect defined in script!\n");
+		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
 #endif
 	}
 
