@@ -25,6 +25,12 @@ edict_t *entities[33];
 int maxPlayers;
 int maxEntities;
 
+enum {
+	CB_NA = 0,
+	CB_UNDEFINED,
+	CB_DEFINED
+};
+
 /**
  * Callback define status
  * int d<callback function basename>:
@@ -36,7 +42,7 @@ typedef struct {
 	int dClientConnect;
 } cbDefines_t;
 
-static cbDefines_t cbDefines = { 0 };
+static cbDefines_t cbDefines = { CB_NA };
 
 /**
  * First callback before the world has spawned, and the game rules initialized
@@ -378,13 +384,13 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 
 	if (!cbDefines.dClientConnect) {
 		if (fn->GetName()->ToString()->Equals(myName)) {
-			cbDefines.dClientConnect = 2;
+			cbDefines.dClientConnect = CB_DEFINED;
 		} else {
-			cbDefines.dClientConnect = 1;
+			cbDefines.dClientConnect = CB_UNDEFINED;
 		}
 	}
 
-	if (cbDefines.dClientConnect == 2) {
+	if (cbDefines.dClientConnect == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
 		params->Set(String::NewFromUtf8(isolate, "id"     ), Number::New(isolate, ENTINDEX(pEntity)));
 		params->Set(String::NewFromUtf8(isolate, "name"   ), String::NewFromUtf8(isolate, pszName));
