@@ -14,10 +14,27 @@ Isolate* isolate = Isolate::GetCurrent();
 HandleScope handle_scope(isolate);
 Handle<Context> context;
 
+/**
+ * Client list, maxplayers + 1
+ */
+edict_t *entities[33];
+int maxPlayers;
+int maxEntities;
+
+/**
+ * Global JS window object
+ */
 static void jsWindowObjectAccessor(Local<String> property, const PropertyCallbackInfo<Value>& info) {
 	info.GetReturnValue().Set(info.Holder());
 }
 
+/**
+ * window.console.log() implementation
+ *
+ * @params FunctionCallbackInfo args virtual arguments: str, ...
+ *
+ * @return v8::Null
+ */
 static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 	for (int i=0; i < args.Length(); i++) {
 		String::Utf8Value str(args[i]->ToString());
@@ -28,8 +45,13 @@ static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 	args.GetReturnValue().Set(Null(isolate));
 }
 
-edict_t *entities[33];
-
+/**
+ * Get player's name
+ *
+ * @params FunctionCallbackInfo args virtual arguments: id
+ *
+ * @return v8::String
+ */
 void v8c_GetPlayerName(const v8::FunctionCallbackInfo<Value> &args) {
 	Handle<Value> result = Null(isolate);
 
@@ -49,13 +71,22 @@ void v8c_GetPlayerName(const v8::FunctionCallbackInfo<Value> &args) {
 	args.GetReturnValue().Set(result);
 }
 
-// very first callback, runs twice: before and after logswitch
+/**
+ * First callback before the world has spawned, and the game rules initialized
+ * Should return the game description (default: Half-Life)
+ *
+ * @return const char *
+ */
 const char *v8_GetGameDescription () {
-	SET_META_RESULT(MRES_IGNORED);
-	return "v8 gamedesc";
+	SET_META_RESULT(MRES_OVERRIDE);
+	return "Counter Strike";
 }
 
-// second callback
+/**
+ * Game init, suitable for v8 initialization, and used for it
+ *
+ * @return void
+ */
 void v8_GameInit () {
 	Handle<ObjectTemplate> globalObject = ObjectTemplate::New();
 	Handle<ObjectTemplate> console      = ObjectTemplate::New();
@@ -87,78 +118,166 @@ void v8_GameInit () {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// third callback
+/**
+ * UNIMPLEMENTED: PlayerMove Init
+ *
+ * @params playermove_s ppmove
+ *
+ * @return void
+ */
 void v8_PM_Init (struct playermove_s *ppmove) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// 4th callback
+/**
+ * UNIMPLEMENTED: Register network encoders
+ *
+ * @return void
+ */
 void v8_RegisterEncoders () {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// 5th callback, run 4 times in batch
+/**
+ * UNIMPLEMENTED: Engine calls this to enumerate player collision hulls, for prediction.  Return 0 if the hullnumber doesn't exist.
+ *
+ * @return int
+ */
 int v8_GetHullBounds (int hullnumber, float *mins, float *maxs) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// 6th callback
+/**
+ * UNIMPLEMENTED: Resets the global gamestate
+ *
+ * @return void
+ */
 void v8_ResetGlobalState () {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// very frequent at startup (400), first callback after logswitch
+/**
+ * UNIMPLEMENTED: First batch of callbacks after the world has spawned, provides a tree-structure with key-value items
+ * Eg. worldspawn env_*, func_*, info_*, light*, infodecal, trigger_*
+ * Unimplemented, as no use
+ * Hint: pkvd->(szClassName|szKeyName|szValue)
+ */
 void v8_KeyValue (edict_t *pentKeyvalue, KeyValueData *pkvd) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// very frequent at startup (400), second callback after logswitch
+/**
+ * UNIMPLEMENTED: Don't know, probably spawning worldspawn items
+ *
+ * @return int
+ */
 int v8_Spawn (edict_t *pent) {
 	SET_META_RESULT(MRES_IGNORED);
 	return 1;
 }
 
-// frequent at startup (50), very frequent in-game (v8_StartFrame * 4!) third callback after logswitch
+/**
+ * UNIMPLEMENTED: Set collision boxes for hits, etc
+ *
+ * @param edict_t pent pointer to an entity
+ *
+ * @return void
+ */
 void v8_SetAbsBox (edict_t *pent) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// fourth callback after logswitch
+/**
+ * Server activate
+ *
+ * @param edict_t pent       pointer to an entity
+ * @param int     edictCount max entities
+ * @param int     clientMax  max clients
+ *
+ * @return void
+ */
 void v8_ServerActivate (edict_t *pEdictList, int edictCount, int clientMax) {
+	maxPlayers = clientMax;
+	maxEntities = edictCount;
 	SET_META_RESULT(MRES_HANDLED);
 }
 
-// batch run at startup, about 80 times, end with: v8_CreateInstancedBaselines
+/**
+ * UNIMPLEMENTED: Create baseline (80 times at startup)
+ *
+ * @param int            player           player
+ * @param int            eindex           entity index
+ * @param entity_state_s baseline         entity state
+ * @param edict_s        entity           entity
+ * @param int            playermodelindex player model index
+ * @param vec3_t         player_mins      
+ * @param vec3_t         player_maxs      
+ *
+ * @return void
+ */
 void v8_CreateBaseline (int player, int eindex, struct entity_state_s *baseline, struct edict_s *entity, int playermodelindex, vec3_t player_mins, vec3_t player_maxs) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// baseline creation last step
+/**
+ * UNIMPLEMENTED: Baseline creation last step
+ *
+ * @return void
+ */
 void v8_CreateInstancedBaselines () {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// frequent in-game (4-5 / sec)
-void v8_Think (edict_t *pent) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-// frequent if player is not spectator
+/**
+ * Entity touch another entity (entity in game)
+ *
+ * @param edict_t pentTouched touched entity
+ * @param edict_t pentOther   other entity
+ *
+ * @return void
+ */
 void v8_Touch (edict_t *pentTouched, edict_t *pentOther) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// frequent in-game (100)
+/**
+ * Player pre-think
+ *
+ * @param edict_t pEntity
+ *
+ * @return void
+ */
 void v8_PlayerPreThink (edict_t *pEntity) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// frequent in-game (100)
+/**
+ * Entity think event (4-5 times / sec)
+ *
+ * @param edict_t pent
+ *
+ * @return void
+ */
+void v8_Think (edict_t *pent) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * Player post-think
+ *
+ * @param edict_t pEntity
+ *
+ * @return void
+ */
 void v8_PlayerPostThink (edict_t *pEntity) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-// very frequent in-game (~ fps ?)
+/**
+ * Startframe
+ *
+ * @return void
+ */
 void v8_StartFrame () {
 	SET_META_RESULT(MRES_IGNORED);
 }
@@ -337,7 +456,6 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 
 void v8_ClientDisconnect (edict_t *pEntity) {
 	entities[ENTINDEX(pEntity)] = NULL;
-	ALERT(at_logged, "v8_ClientDisconnect\n");
 	SET_META_RESULT(MRES_IGNORED);
 }
 
