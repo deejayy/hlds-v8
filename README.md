@@ -22,6 +22,18 @@ Half Life Dedicated Server with Google V8 JS Engine (a metamod plugin)
     v8# make dependencies
     v8# make ia32.release i18nsupport=off library=shared
 
+Installing the package provided by your linux distro could satisfy the dependecy. Eg. ```apt-get install libv8-dev```.
+
+#### Modify hlsdk source
+
+Compiling HLDS-V8 with untouched hlsdk will throw an error message:
+
+    ... error: extra qualification ‘CBasePlayer::’ on member ‘TabulateAmmo’ [-fpermissive]
+
+To fix this, ```hlsdk-2.3-p4/multiplayer/dlls/player.h``` line 295 should contain:
+
+    void TabulateAmmo( void );
+
 #### Run build.sh
 
 ### Using it
@@ -38,9 +50,10 @@ Run hlds as usual.
 
 JS source:
 
-    function ClientConnect(name, address) {
-        console.log('A client connected! Name: ' + name + ', ip: ' + address);
-    }
+    function ClientConnect(params)
+    {
+    	console.log('A client connected! Name: ' + params.name + ', ip: ' + params.address);
+    };
 
 Server log:
 
@@ -49,4 +62,4 @@ Server log:
     
 ### Very-very WIP
 
-As you can see in the source, the JS snippet is built in and only two dllapi callbacks are used to demonstrate the conception. Feel free to fork or contribute the project.
+As you can see in the source, the JS path is built in and only few dllapi callbacks are used to demonstrate the conception. Feel free to fork or contribute the project.
