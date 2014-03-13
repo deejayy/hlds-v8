@@ -28,10 +28,7 @@ int maxEntities;
 
 /**
  * Callback define status
- * int d<callback function basename>:
- * 0: n/a
- * 1: not defined
- * 2: defined
+ * int d<callback function basename>: CB_*
  */
 typedef struct {
 	int dClientConnect;
@@ -52,114 +49,10 @@ typedef struct {
 	int dSpectatorConnect;
 	int dSpectatorDisconnect;
 	int dSpectatorThink;
+	int dClientUserInfoChanged;
 } cbDefines_t;
 
 static cbDefines_t cbDefines = { };
-
-void v8_PM_Move (struct playermove_s *ppmove, qboolean server) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_SetupVisibility (struct edict_s *pViewEntity, struct edict_s *pClient, unsigned char **pvs, unsigned char **pas) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_UpdateClientData (const struct edict_s *ent, int sendweapons, struct clientdata_s *cd) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-int v8_GetWeaponData (struct edict_s *player, struct weapon_data_s *info) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-int v8_AllowLagCompensation () {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_Use (edict_t *pentUsed, edict_t *pentOther) {
-	ALERT(at_logged, "v8_Use\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_Blocked (edict_t *pentBlocked, edict_t *pentOther) {
-	ALERT(at_logged, "v8_Blocked\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_Save (edict_t *pent, SAVERESTOREDATA *pSaveData) {
-	ALERT(at_logged, "v8_Save\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-int v8_Restore (edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity) {
-	ALERT(at_logged, "v8_Restore\n");
-	SET_META_RESULT(MRES_IGNORED);
-	return 1;
-}
-
-void v8_SaveWriteFields (SAVERESTOREDATA *, const char *, void *, TYPEDESCRIPTION *, int) {
-	ALERT(at_logged, "v8_SaveWriteFields\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_SaveReadFields (SAVERESTOREDATA *, const char *, void *, TYPEDESCRIPTION *, int) {
-	ALERT(at_logged, "v8_SaveReadFields\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_SaveGlobalState (SAVERESTOREDATA *) {
-	ALERT(at_logged, "v8_SaveGlobalState\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_RestoreGlobalState (SAVERESTOREDATA *) {
-	ALERT(at_logged, "v8_RestoreGlobalState\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_ClientUserInfoChanged (edict_t *pEntity, char *infobuffer) {
-	ALERT(at_logged, "v8_ClientUserInfoChanged\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_ParmsNewLevel () {
-	ALERT(at_logged, "v8_ParmsNewLevel\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_ParmsChangeLevel () {
-	ALERT(at_logged, "v8_ParmsChangeLevel\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_PlayerCustomization (edict_t *pEntity, customization_t *pCustom) {
-	ALERT(at_logged, "v8_PlayerCustomization\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-void v8_Sys_Error (const char *error_string) {
-	ALERT(at_logged, "v8_Sys_Error\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-char v8_PM_FindTextureType (char *name) {
-	ALERT(at_logged, "v8_PM_FindTextureType\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-int v8_ConnectionlessPacket (const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size) {
-	ALERT(at_logged, "v8_ConnectionlessPacket\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-int v8_InconsistentFile (const struct edict_s *player, const char *filename, char *disconnect_message) {
-	ALERT(at_logged, "v8_InconsistentFile\n");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/* ================================================================== */
-/* ================================================================== */
-/* ================================================================== */
 
 /**
  * First callback before the world has spawned, and the game rules initialized
@@ -183,22 +76,30 @@ void v8_GameInit () {
 	META_RES MRES = MRES_IGNORED;
 
 	Context::Scope context_scope(context);
-	const char* name = "GameInit";
 
-	if (!cbDefines.dGameInit) {
-		cbDefines.dGameInit = v8c_CheckCallbackIsDefined(name);
-	}
+	cbDefines.dGameInit              = v8c_CheckCallbackIsDefined("GameInit");
+	cbDefines.dServerActivate        = v8c_CheckCallbackIsDefined("ServerActivate");
+	cbDefines.dClientConnect         = v8c_CheckCallbackIsDefined("ClientConnect");
+	cbDefines.dCmdStart              = v8c_CheckCallbackIsDefined("CmdStart");
+	cbDefines.dClientCommand         = v8c_CheckCallbackIsDefined("ClientCommand");
+	cbDefines.dServerDeactivate      = v8c_CheckCallbackIsDefined("ServerDeactivate");
+	cbDefines.dPlayerPreThink        = v8c_CheckCallbackIsDefined("PlayerPreThink");
+	cbDefines.dThink                 = v8c_CheckCallbackIsDefined("Think");
+	cbDefines.dPlayerPostThink       = v8c_CheckCallbackIsDefined("PlayerPostThink");
+	cbDefines.dTouch                 = v8c_CheckCallbackIsDefined("Touch");
+	cbDefines.dStartFrame            = v8c_CheckCallbackIsDefined("StartFrame");
+	cbDefines.dCmdEnd                = v8c_CheckCallbackIsDefined("CmdEnd");
+	cbDefines.dClientDisconnect      = v8c_CheckCallbackIsDefined("ClientDisconnect");
+	cbDefines.dClientKill            = v8c_CheckCallbackIsDefined("ClientKill");
+	cbDefines.dClientPutInServer     = v8c_CheckCallbackIsDefined("ClientPutInServer");
+	cbDefines.dSpectatorConnect      = v8c_CheckCallbackIsDefined("SpectatorConnect");
+	cbDefines.dSpectatorDisconnect   = v8c_CheckCallbackIsDefined("SpectatorDisconnect");
+	cbDefines.dSpectatorThink        = v8c_CheckCallbackIsDefined("SpectatorThink");
+	cbDefines.dClientUserInfoChanged = v8c_CheckCallbackIsDefined("ClientUserInfoChanged");
 
 	if (cbDefines.dGameInit == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
+		MRES = v8c_UCallback("GameInit", params);
 	}
 
 	SET_META_RESULT(MRES);
@@ -207,38 +108,17 @@ void v8_GameInit () {
 /**
  * Server activate
  *
- * @param edict_t pent       pointer to an entity
+ * @param edict_t pEdictList entity list
  * @param int     edictCount max entities
  * @param int     clientMax  max clients
  *
  * @return void
  */
 void v8_ServerActivate (edict_t *pEdictList, int edictCount, int clientMax) {
-	maxPlayers = clientMax;
 	maxEntities = edictCount;
+	maxPlayers = clientMax;
 
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "ServerActivate";
-
-	if (!cbDefines.dServerActivate) {
-		cbDefines.dServerActivate = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dServerActivate == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dServerActivate == CB_DEFINED ? v8c_UCallback("ServerActivate") : MRES_IGNORED);
 }
 
 /**
@@ -256,11 +136,6 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 	META_RES MRES = MRES_IGNORED;
 
 	Context::Scope context_scope(context);
-	const char* name = "ClientConnect";
-
-	if (!cbDefines.dClientConnect) {
-		cbDefines.dClientConnect = v8c_CheckCallbackIsDefined(name);
-	}
 
 	if (cbDefines.dClientConnect == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
@@ -268,14 +143,7 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 		params->Set(String::NewFromUtf8(isolate, "name"   ), String::NewFromUtf8(isolate, pszName));
 		params->Set(String::NewFromUtf8(isolate, "address"), String::NewFromUtf8(isolate, pszAddress));
 
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
+		MRES = v8c_UCallback("ClientConnect", params);
 	}
 
 	SET_META_RESULT(MRES);
@@ -294,68 +162,27 @@ void v8_CmdStart (const edict_t *player, const struct usercmd_s *cmd, unsigned i
 	META_RES MRES = MRES_IGNORED;
 
 	Context::Scope context_scope(context);
-	const char* name = "CmdStart";
-
-	if (!cbDefines.dCmdStart) {
-		cbDefines.dCmdStart = v8c_CheckCallbackIsDefined(name);
-	}
 
 	if (cbDefines.dCmdStart == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
 
 		usercmd_t *command = (usercmd_t *)cmd;
 
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(player)));
-
-		Handle<Object> viewangles = Object::New(isolate);
-		viewangles->Set(String::NewFromUtf8(isolate, "x"), Number::New(isolate, command->viewangles[0]));
-		viewangles->Set(String::NewFromUtf8(isolate, "y"), Number::New(isolate, command->viewangles[1]));
-		viewangles->Set(String::NewFromUtf8(isolate, "z"), Number::New(isolate, command->viewangles[2]));
-
-		Handle<Object> impact_position = Object::New(isolate);
-		impact_position->Set(String::NewFromUtf8(isolate, "x"), Number::New(isolate, command->impact_position[0]));
-		impact_position->Set(String::NewFromUtf8(isolate, "y"), Number::New(isolate, command->impact_position[1]));
-		impact_position->Set(String::NewFromUtf8(isolate, "z"), Number::New(isolate, command->impact_position[2]));
-
-		Handle<Object> buttons = Object::New(isolate);
-		buttons->Set(String::NewFromUtf8(isolate, "attack"    ), Number::New(isolate, command->buttons & IN_ATTACK));
-		buttons->Set(String::NewFromUtf8(isolate, "jump"      ), Number::New(isolate, command->buttons & IN_JUMP));
-		buttons->Set(String::NewFromUtf8(isolate, "duck"      ), Number::New(isolate, command->buttons & IN_DUCK));
-		buttons->Set(String::NewFromUtf8(isolate, "forward"   ), Number::New(isolate, command->buttons & IN_FORWARD));
-		buttons->Set(String::NewFromUtf8(isolate, "back"      ), Number::New(isolate, command->buttons & IN_BACK));
-		buttons->Set(String::NewFromUtf8(isolate, "use"       ), Number::New(isolate, command->buttons & IN_USE));
-		buttons->Set(String::NewFromUtf8(isolate, "cancel"    ), Number::New(isolate, command->buttons & IN_CANCEL));
-		buttons->Set(String::NewFromUtf8(isolate, "left"      ), Number::New(isolate, command->buttons & IN_LEFT));
-		buttons->Set(String::NewFromUtf8(isolate, "right"     ), Number::New(isolate, command->buttons & IN_RIGHT));
-		buttons->Set(String::NewFromUtf8(isolate, "moveleft"  ), Number::New(isolate, command->buttons & IN_MOVELEFT));
-		buttons->Set(String::NewFromUtf8(isolate, "moveright" ), Number::New(isolate, command->buttons & IN_MOVERIGHT));
-		buttons->Set(String::NewFromUtf8(isolate, "attack2"   ), Number::New(isolate, command->buttons & IN_ATTACK2));
-		buttons->Set(String::NewFromUtf8(isolate, "run"       ), Number::New(isolate, command->buttons & IN_RUN));
-		buttons->Set(String::NewFromUtf8(isolate, "reload"    ), Number::New(isolate, command->buttons & IN_RELOAD));
-		buttons->Set(String::NewFromUtf8(isolate, "alt1"      ), Number::New(isolate, command->buttons & IN_ALT1));
-		buttons->Set(String::NewFromUtf8(isolate, "score"     ), Number::New(isolate, command->buttons & IN_SCORE));
-
+		params->Set(String::NewFromUtf8(isolate, "id"              ), Number::New(isolate, ENTINDEX(player)));
 		params->Set(String::NewFromUtf8(isolate, "lerp_msec"       ), Number::New(isolate, command->lerp_msec));      // Interpolation time on client
 		params->Set(String::NewFromUtf8(isolate, "msec"            ), Number::New(isolate, command->msec));           // Duration in ms of command
-		params->Set(String::NewFromUtf8(isolate, "viewangles"      ), viewangles);                                    // Command view angles.
+		params->Set(String::NewFromUtf8(isolate, "viewangles"      ), v8c_Vec3tToObject(command->viewangles));        // Command view angles.
 		params->Set(String::NewFromUtf8(isolate, "forwardmove"     ), Number::New(isolate, command->forwardmove));    // Forward velocity.
 		params->Set(String::NewFromUtf8(isolate, "sidemove"        ), Number::New(isolate, command->sidemove));       // Sideways velocity.
 		params->Set(String::NewFromUtf8(isolate, "upmove"          ), Number::New(isolate, command->upmove));         // Upward velocity.
 		params->Set(String::NewFromUtf8(isolate, "lightlevel"      ), Number::New(isolate, command->lightlevel));     // Light level at spot where we are standing.
-		params->Set(String::NewFromUtf8(isolate, "buttons"         ), buttons);                                       // Attack buttons
+		params->Set(String::NewFromUtf8(isolate, "buttons"         ), Number::New(isolate, command->buttons));        // Attack buttons
 		params->Set(String::NewFromUtf8(isolate, "impulse"         ), Number::New(isolate, command->impulse));        // Impulse command issued.
 		params->Set(String::NewFromUtf8(isolate, "weaponselect"    ), Number::New(isolate, command->weaponselect));   // Current weapon id
 		params->Set(String::NewFromUtf8(isolate, "impact_index"    ), Number::New(isolate, command->impact_index));   // experimental
-		params->Set(String::NewFromUtf8(isolate, "impact_position" ), impact_position);                               // experimental
+		params->Set(String::NewFromUtf8(isolate, "impact_position" ), v8c_Vec3tToObject(command->impact_position));   // experimental
 
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
+		MRES = v8c_UCallback("CmdStart", params);
 	}
 
 	SET_META_RESULT(MRES);
@@ -372,11 +199,6 @@ void v8_ClientCommand (edict_t *pEntity) {
 	META_RES MRES = MRES_IGNORED;
 
 	Context::Scope context_scope(context);
-	const char* name = "ClientCommand";
-
-	if (!cbDefines.dClientCommand) {
-		cbDefines.dClientCommand = v8c_CheckCallbackIsDefined(name);
-	}
 
 	if (cbDefines.dClientCommand == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
@@ -392,14 +214,7 @@ void v8_ClientCommand (edict_t *pEntity) {
 		}
 		params->Set(String::NewFromUtf8(isolate, "argv"), argv);
 
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
+		MRES = v8c_UCallback("ClientCommand", params);
 	}
 
 	SET_META_RESULT(MRES);
@@ -409,28 +224,7 @@ void v8_ClientCommand (edict_t *pEntity) {
  * Server deactivate
  */
 void v8_ServerDeactivate () {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "ServerDeactivate";
-
-	if (!cbDefines.dServerDeactivate) {
-		cbDefines.dServerDeactivate = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dServerDeactivate == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dServerDeactivate == CB_DEFINED ? v8c_UCallback("ServerDeactivate") : MRES_IGNORED);
 }
 
 /**
@@ -441,31 +235,7 @@ void v8_ServerDeactivate () {
  * @return void
  */
 void v8_PlayerPreThink (edict_t *pEntity) {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "PlayerPreThink";
-
-	if (!cbDefines.dPlayerPreThink) {
-		cbDefines.dPlayerPreThink = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dPlayerPreThink == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dPlayerPreThink == CB_DEFINED ? v8c_UCallback("PlayerPreThink", ENTINDEX(pEntity)) : MRES_IGNORED);
 }
 
 /**
@@ -479,11 +249,6 @@ void v8_Think (edict_t *pEntity) {
 	META_RES MRES = MRES_IGNORED;
 
 	Context::Scope context_scope(context);
-	const char* name = "Think";
-
-	if (!cbDefines.dThink) {
-		cbDefines.dThink = v8c_CheckCallbackIsDefined(name);
-	}
 
 	if (cbDefines.dThink == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
@@ -494,14 +259,7 @@ void v8_Think (edict_t *pEntity) {
 			params->Set(String::NewFromUtf8(isolate, "classname"), String::NewFromUtf8(isolate, STRING(entity->pev->classname)));
 		}
 
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
+		MRES = v8c_UCallback("Think", params);
 	}
 
 	SET_META_RESULT(MRES);
@@ -515,31 +273,7 @@ void v8_Think (edict_t *pEntity) {
  * @return void
  */
 void v8_PlayerPostThink (edict_t *pEntity) {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "PlayerPostThink";
-
-	if (!cbDefines.dPlayerPostThink) {
-		cbDefines.dPlayerPostThink = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dPlayerPostThink == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dPlayerPostThink == CB_DEFINED ? v8c_UCallback("PlayerPostThink", ENTINDEX(pEntity)) : MRES_IGNORED);
 }
 
 /**
@@ -554,11 +288,6 @@ void v8_Touch (edict_t *pentTouched, edict_t *pentOther) {
 	META_RES MRES = MRES_IGNORED;
 
 	Context::Scope context_scope(context);
-	const char* name = "Touch";
-
-	if (!cbDefines.dTouch) {
-		cbDefines.dTouch = v8c_CheckCallbackIsDefined(name);
-	}
 
 	if (cbDefines.dTouch == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
@@ -566,14 +295,7 @@ void v8_Touch (edict_t *pentTouched, edict_t *pentOther) {
 		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pentTouched)));
 		params->Set(String::NewFromUtf8(isolate, "id2"), Number::New(isolate, ENTINDEX(pentOther)));
 
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
+		MRES = v8c_UCallback("Touch", params);
 	}
 
 	SET_META_RESULT(MRES);
@@ -585,230 +307,61 @@ void v8_Touch (edict_t *pentTouched, edict_t *pentOther) {
  * @return void
  */
 void v8_StartFrame () {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "StartFrame";
-
-	if (!cbDefines.dStartFrame) {
-		cbDefines.dStartFrame = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dStartFrame == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dStartFrame == CB_DEFINED ? v8c_UCallback("StartFrame") : MRES_IGNORED);
 }
 
-// frequent in-game (100)
 void v8_CmdEnd (const edict_t *pEntity) {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "CmdEnd";
-
-	if (!cbDefines.dCmdEnd) {
-		cbDefines.dCmdEnd = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dCmdEnd == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dCmdEnd == CB_DEFINED ? v8c_UCallback("CmdEnd", ENTINDEX(pEntity)) : MRES_IGNORED);
 }
 
 void v8_ClientDisconnect (edict_t *pEntity) {
-	entities[ENTINDEX(pEntity)] = NULL;
-
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "ClientDisconnect";
-
-	if (!cbDefines.dClientDisconnect) {
-		cbDefines.dClientDisconnect = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dClientDisconnect == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dClientDisconnect == CB_DEFINED ? v8c_UCallback("ClientDisconnect", ENTINDEX(pEntity)) : MRES_IGNORED);
 }
 
 void v8_ClientKill (edict_t *pEntity) {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "ClientKill";
-
-	if (!cbDefines.dClientKill) {
-		cbDefines.dClientKill = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dClientKill == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dClientKill == CB_DEFINED ? v8c_UCallback("ClientKill", ENTINDEX(pEntity)) : MRES_IGNORED);
 }
 
 void v8_ClientPutInServer (edict_t *pEntity) {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "ClientPutInServer";
-
-	if (!cbDefines.dClientPutInServer) {
-		cbDefines.dClientPutInServer = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dClientPutInServer == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dClientPutInServer == CB_DEFINED ? v8c_UCallback("ClientPutInServer", ENTINDEX(pEntity)) : MRES_IGNORED);
 }
 
 void v8_SpectatorConnect (edict_t *pEntity) {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "SpectatorConnect";
-
-	if (!cbDefines.dSpectatorConnect) {
-		cbDefines.dSpectatorConnect = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dSpectatorConnect == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dSpectatorConnect == CB_DEFINED ? v8c_UCallback("SpectatorConnect", ENTINDEX(pEntity)) : MRES_IGNORED);
 }
 
 void v8_SpectatorDisconnect (edict_t *pEntity) {
-	META_RES MRES = MRES_IGNORED;
-
-	Context::Scope context_scope(context);
-	const char* name = "SpectatorDisconnect";
-
-	if (!cbDefines.dSpectatorDisconnect) {
-		cbDefines.dSpectatorDisconnect = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dSpectatorDisconnect == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
-	}
-
-	SET_META_RESULT(MRES);
+	SET_META_RESULT(cbDefines.dSpectatorDisconnect == CB_DEFINED ? v8c_UCallback("SpectatorDisconnect", ENTINDEX(pEntity)) : MRES_IGNORED);
 }
 
 void v8_SpectatorThink (edict_t *pEntity) {
+	SET_META_RESULT(cbDefines.dSpectatorThink == CB_DEFINED ? v8c_UCallback("SpectatorThink", ENTINDEX(pEntity)) : MRES_IGNORED);
+}
+
+/**
+ * Called after the player changes userinfo - gives dll a chance to modify it before it gets sent into the rest of the engine.
+ *
+ * @param edict_t pEntity    entity
+ * @param char*   infobuffer info key buffer string (\key\value...)
+ *
+ * @return void
+ */
+void v8_ClientUserInfoChanged (edict_t *pEntity, char *infobuffer) {
 	META_RES MRES = MRES_IGNORED;
 
 	Context::Scope context_scope(context);
-	const char* name = "SpectatorThink";
 
-	if (!cbDefines.dSpectatorThink) {
-		cbDefines.dSpectatorThink = v8c_CheckCallbackIsDefined(name);
-	}
-
-	if (cbDefines.dSpectatorThink == CB_DEFINED) {
+	if (cbDefines.dClientUserInfoChanged == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
 
 		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
+		params->Set(String::NewFromUtf8(isolate, "infobuffer"), String::NewFromUtf8(isolate, infobuffer));
 
-		Handle<Value>  result  = v8c_UCallback(name, params);
-		if (int meta_res = result->ToInt32()->Value()) {
-			MRES = META_RES(meta_res);
-		}
-	#ifdef v8debug
-	} else {
-		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
-	#endif
+		MRES = v8c_UCallback("ClientUserInfoChanged", params);
 	}
 
 	SET_META_RESULT(MRES);
 }
-
 
 /* ================================================================== */
 /* =================== U N I M P L E M E N T E D ==================== */
@@ -884,6 +437,7 @@ void v8_SetAbsBox (edict_t *pent) {
 
 /**
  * UNIMPLEMENTED: Create baseline (80 times at startup)
+ * Creates baselines used for network encoding, especially for player data since players are not spawned until connect time.
  *
  * @param int            player           player
  * @param int            eindex           entity index
@@ -909,9 +463,152 @@ void v8_CreateInstancedBaselines () {
 }
 
 /**
- * UNIMPLEMENTED: Don't know, but too frequent to use for anything
+ * UNIMPLEMENTED: Too frequent to use for anything
+ * Determine whether we should send this entity to all clients (eg. spectators, model-less entities (etc...): no)
  */
 int v8_AddToFullPack (struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet) {
 	SET_META_RESULT(MRES_IGNORED);
 	return 1;
 }
+
+/**
+ * UNIMPLEMENTED: Set up visible entities by the client (per frame)
+ */
+void v8_SetupVisibility (struct edict_s *pViewEntity, struct edict_s *pClient, unsigned char **pvs, unsigned char **pas) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED: Data sent to current client only engine sets cd to 0 before calling
+ */
+void v8_UpdateClientData (const struct edict_s *ent, int sendweapons, struct clientdata_s *cd) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED: Probably not used
+ */
+int v8_GetWeaponData (struct edict_s *player, struct weapon_data_s *info) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED: Return 1 if lag compensation should be allowed
+ */
+int v8_AllowLagCompensation () {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_PM_Move (struct playermove_s *ppmove, qboolean server) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_Use (edict_t *pentUsed, edict_t *pentOther) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_Blocked (edict_t *pentBlocked, edict_t *pentOther) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_Save (edict_t *pent, SAVERESTOREDATA *pSaveData) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+int v8_Restore (edict_t *pent, SAVERESTOREDATA *pSaveData, int globalEntity) {
+	SET_META_RESULT(MRES_IGNORED);
+	return 1;
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_SaveWriteFields (SAVERESTOREDATA *, const char *, void *, TYPEDESCRIPTION *, int) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_SaveReadFields (SAVERESTOREDATA *, const char *, void *, TYPEDESCRIPTION *, int) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_SaveGlobalState (SAVERESTOREDATA *) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_RestoreGlobalState (SAVERESTOREDATA *) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_ParmsNewLevel () {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_ParmsChangeLevel () {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_PlayerCustomization (edict_t *pEntity, customization_t *pCustom) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+void v8_Sys_Error (const char *error_string) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+char v8_PM_FindTextureType (char *name) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+int v8_ConnectionlessPacket (const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ * UNIMPLEMENTED
+ */
+int v8_InconsistentFile (const struct edict_s *player, const char *filename, char *disconnect_message) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+

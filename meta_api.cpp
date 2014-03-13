@@ -20,8 +20,8 @@ static META_FUNCTIONS gMetaFunctionTable = {
 plugin_info_t Plugin_info = {
 	META_INTERFACE_VERSION,	// ifvers
 	"hlds-v8",	// name
-	"0.56",	// version
-	"2014/03/07",	// date
+	"0.56.10",	// GITC-version
+	"2014-03-13",	// GITC-date
 	"DeeJayy <deejayy@deejayy.hu>",	// author
 	"http://deejayy.hu/",	// url
 	"HLDSV8",	// logtag, all caps please

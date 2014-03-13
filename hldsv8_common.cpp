@@ -123,6 +123,21 @@ void v8c_GetPlayerWONId(const v8::FunctionCallbackInfo<Value> &args) {
 }
 
 /**
+ * Convert a vec3_t array to an Object
+ */
+Handle<Object> v8c_Vec3tToObject(vec3_t vec)
+{
+	Context::Scope context_scope(context);
+
+	Handle<Object> vecObj = Object::New(isolate);
+	vecObj->Set(String::NewFromUtf8(isolate, "x"), Number::New(isolate, vec[0]));
+	vecObj->Set(String::NewFromUtf8(isolate, "y"), Number::New(isolate, vec[1]));
+	vecObj->Set(String::NewFromUtf8(isolate, "z"), Number::New(isolate, vec[2]));
+
+	return vecObj;
+}
+
+/**
  * Check whether a callback is defined in context
  *
  * @param char* name function name
@@ -141,6 +156,7 @@ int v8c_CheckCallbackIsDefined(const char *name)
 	if (fn->GetName()->ToString()->Equals(myName)) {
 		result = CB_DEFINED;
 	} else {
+		ALERT(at_logged, "[HLDSV8] No %s defined in script!\n", name);
 		result = CB_UNDEFINED;
 	}
 
@@ -150,12 +166,13 @@ int v8c_CheckCallbackIsDefined(const char *name)
 /**
  * Universal callback with params
  *
- * @param char*          name   function name
- * @param Handle<Object> params js object with arguments
+ * @param char*          name      function name
+ * @param int            isDefined is the callback defined in script
+ * @param Handle<Object> params    js object with arguments
  *
  * @return Handle<Value>
  */
-Handle<Value> v8c_UCallback(const char *name, Handle<Object> params)
+META_RES v8c_UCallback(const char *name, Handle<Object> params)
 {
 	Context::Scope context_scope(context);
 
@@ -165,11 +182,28 @@ Handle<Value> v8c_UCallback(const char *name, Handle<Object> params)
 	const int      fnArgc = 1;
 	Handle<Value>  fnArgs[fnArgc]  = { params };
 
-	Handle<Value>  result  = fn->Call(context->Global(), fnArgc, fnArgs);
+	int      res     = fn->Call(context->Global(), fnArgc, fnArgs)->ToInt32()->Value();
+	META_RES result  = META_RES(res ? res : 1);
 
 	return result;
 }
 
+META_RES v8c_UCallback(const char *name)
+{
+	Context::Scope context_scope(context);
+	Handle<Object> params = Object::New(isolate);
+
+	return v8c_UCallback(name, params);
+}
+
+META_RES v8c_UCallback(const char *name, int id)
+{
+	Context::Scope context_scope(context);
+	Handle<Object> params = Object::New(isolate);
+	params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, id));
+
+	return v8c_UCallback(name, params);
+}
 
 /**
  * Global JS window object
