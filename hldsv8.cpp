@@ -79,12 +79,6 @@ int v8_EntIsOnFloor (edict_t *e) {
 	return 0;
 }
 
-int v8_DropToFloor (edict_t* e) {
-	ALERT(at_logged, "[V8E] %s\n", "DropToFloor");
-	SET_META_RESULT(MRES_IGNORED);
-	return 0;
-}
-
 int v8_WalkMove (edict_t *ent, float yaw, float dist, int iMode) {
 	ALERT(at_logged, "[V8E] %s\n", "WalkMove");
 	SET_META_RESULT(MRES_IGNORED);
@@ -107,18 +101,8 @@ int v8_TraceMonsterHull (edict_t *pEdict, const float *v1, const float *v2, int 
 	return 0;
 }
 
-void v8_TraceHull (const float *v1, const float *v2, int fNoMonsters, int hullNumber, edict_t *pentToSkip, TraceResult *ptr) {
-	ALERT(at_logged, "[V8E] %s\n", "TraceHull");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
 void v8_TraceModel (const float *v1, const float *v2, int hullNumber, edict_t *pent, TraceResult *ptr) {
 	ALERT(at_logged, "[V8E] %s\n", "TraceModel");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-const char * v8_TraceTexture (edict_t *pTextureEntity, const float *v1, const float *v2) {
-	ALERT(at_logged, "[V8E] %s\n", "TraceTexture");
 	SET_META_RESULT(MRES_IGNORED);
 }
 
@@ -160,11 +144,6 @@ const char* v8_SzFromIndex (int iString) {
 
 struct entvars_s* v8_GetVarsOfEnt (edict_t *pEdict) {
 	ALERT(at_logged, "[V8E] %s\n", "GetVarsOfEnt");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-edict_t* v8_PEntityOfEntOffset (int iEntOffset) {
-	ALERT(at_logged, "[V8E] %s\n", "PEntityOfEntOffset");
 	SET_META_RESULT(MRES_IGNORED);
 }
 
@@ -228,11 +207,6 @@ CRC32_t v8_CRC32_Final (CRC32_t pulCRC) {
 	SET_META_RESULT(MRES_IGNORED);
 }
 
-void v8_SetView (const edict_t *pClient, const edict_t *pViewent) {
-	ALERT(at_logged, "[V8E] %s\n", "SetView");
-	SET_META_RESULT(MRES_IGNORED);
-}
-
 float v8_Time (void) {
 	ALERT(at_logged, "[V8E] %s\n", "Time");
 	SET_META_RESULT(MRES_IGNORED);
@@ -288,12 +262,6 @@ int v8_NumberOfEntities (void) {
 
 int v8_IsMapValid (char *filename) {
 	ALERT(at_logged, "[V8E] %s\n", "IsMapValid");
-	SET_META_RESULT(MRES_IGNORED);
-	return 0;
-}
-
-int v8_GetPlayerUserId (edict_t *e) {
-	ALERT(at_logged, "[V8E] %s\n", "GetPlayerUserId");
 	SET_META_RESULT(MRES_IGNORED);
 	return 0;
 }
@@ -403,6 +371,35 @@ int v8_EngCheckParm (const char *pchCmdLineToken, char **pchNextVal) {
 	ALERT(at_logged, "[V8E] %s\n", "EngCheckParm");
 	SET_META_RESULT(MRES_IGNORED);
 	return 0;
+}
+
+/**
+ * Fired @ knifing
+ */
+void v8_TraceHull (const float *v1, const float *v2, int fNoMonsters, int hullNumber, edict_t *pentToSkip, TraceResult *ptr) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ *
+ */
+void v8_SetView (const edict_t *pClient, const edict_t *pViewent) {
+	SET_META_RESULT(MRES_IGNORED);
+}
+
+/**
+ *
+ */
+int v8_DropToFloor (edict_t* e) {
+	SET_META_RESULT(MRES_IGNORED);
+	return 0;
+}
+
+/**
+ *
+ */
+const char * v8_TraceTexture (edict_t *pTextureEntity, const float *v1, const float *v2) {
+	SET_META_RESULT(MRES_IGNORED);
 }
 
 /**
@@ -572,75 +569,6 @@ int v8_ModelIndex (const char *m) {
 	return 0;
 }
 
-/**
- * Start a message buffer
- */
-void v8_MessageBegin (int msg_dest, int msg_type, const float *pOrigin, edict_t *ed) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * End a message buffer
- */
-void v8_MessageEnd (void) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * Write data to client buffer
- */
-void v8_WriteByte (int iValue) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * Write data to client buffer
- */
-void v8_WriteChar (int iValue) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * Write data to client buffer
- */
-void v8_WriteShort (int iValue) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * Write data to client buffer
- */
-void v8_WriteLong (int iValue) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * Write data to client buffer
- */
-void v8_WriteAngle (float flValue) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * Write data to client buffer
- */
-void v8_WriteCoord (float flValue) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * Write data to client buffer
- */
-void v8_WriteString (const char *sz) {
-	SET_META_RESULT(MRES_IGNORED);
-}
-
-/**
- * Write data to client buffer
- */
-void v8_WriteEntity (int iValue) {
-	SET_META_RESULT(MRES_IGNORED);
-}
 
 /**
  * Callback define status
@@ -685,9 +613,20 @@ typedef struct {
 	int dGetPhysicsKeyValue;
 	int dSetPhysicsKeyValue;
 	int dGetPlayerAuthId;
+	int dGetPlayerUserId;
 	int dFindEntityByString;
 	int dPlaybackEvent;
 	int dEmitSound;
+	int dMessageBegin;
+	int dMessageEnd;
+	int dWriteByte;
+	int dWriteChar;
+	int dWriteShort;
+	int dWriteLong;
+	int dWriteAngle;
+	int dWriteCoord;
+	int dWriteString;
+	int dWriteEntity;
 } cbDefines_t;
 
 static cbDefines_t cbDefines = { };
@@ -753,9 +692,20 @@ void v8_GameInit () {
 	cbDefines.dGetPhysicsKeyValue    = v8c_CheckCallbackIsDefined("GetPhysicsKeyValue");
 	cbDefines.dSetPhysicsKeyValue    = v8c_CheckCallbackIsDefined("SetPhysicsKeyValue");
 	cbDefines.dGetPlayerAuthId       = v8c_CheckCallbackIsDefined("GetPlayerAuthId");
+	cbDefines.dGetPlayerUserId       = v8c_CheckCallbackIsDefined("GetPlayerUserId");
 	cbDefines.dFindEntityByString    = v8c_CheckCallbackIsDefined("FindEntityByString");
 	cbDefines.dPlaybackEvent         = v8c_CheckCallbackIsDefined("PlaybackEvent");
 	cbDefines.dEmitSound             = v8c_CheckCallbackIsDefined("EmitSound");
+	cbDefines.dMessageBegin          = v8c_CheckCallbackIsDefined("MessageBegin");
+	cbDefines.dMessageEnd            = v8c_CheckCallbackIsDefined("MessageEnd");
+	cbDefines.dWriteByte             = v8c_CheckCallbackIsDefined("WriteByte");
+	cbDefines.dWriteChar             = v8c_CheckCallbackIsDefined("WriteChar");
+	cbDefines.dWriteShort            = v8c_CheckCallbackIsDefined("WriteShort");
+	cbDefines.dWriteLong             = v8c_CheckCallbackIsDefined("WriteLong");
+	cbDefines.dWriteAngle            = v8c_CheckCallbackIsDefined("WriteAngle");
+	cbDefines.dWriteCoord            = v8c_CheckCallbackIsDefined("WriteCoord");
+	cbDefines.dWriteString           = v8c_CheckCallbackIsDefined("WriteString");
+	cbDefines.dWriteEntity           = v8c_CheckCallbackIsDefined("WriteEntity");
 
 	if (cbDefines.dGameInit == CB_DEFINED) {
 		Handle<Object> params = Object::New(isolate);
@@ -1144,6 +1094,7 @@ void v8_AlertMessage (ALERT_TYPE atype, char *szFmt, ...) {
 		va_end   (argptr);
 
 		params->Set(String::NewFromUtf8(isolate, "string"), String::NewFromUtf8(isolate, string));
+		params->Set(String::NewFromUtf8(isolate, "atype"), Number::New(isolate, int(atype)));
 
 		MRES = v8c_UCallback("AlertMessage", params);
 	}
@@ -1357,6 +1308,10 @@ const char * v8_GetPlayerAuthId (edict_t *e) {
 	SET_META_RESULT(cbDefines.dGetPlayerAuthId == CB_DEFINED ? v8c_UCallback("GetPlayerAuthId", ENTINDEX(e)) : MRES_IGNORED);
 }
 
+int v8_GetPlayerUserId (edict_t *e) {
+	SET_META_RESULT(cbDefines.dGetPlayerUserId == CB_DEFINED ? v8c_UCallback("GetPlayerUserId", ENTINDEX(e)) : MRES_IGNORED);
+}
+
 edict_t* v8_FindEntityByString (edict_t *pEdictStartSearchAfter, const char *pszField, const char *pszValue) {
 	META_RES MRES = MRES_IGNORED;
 
@@ -1422,6 +1377,101 @@ void v8_PlaybackEvent (int flags, const edict_t *pInvoker, unsigned short eventi
 	SET_META_RESULT(MRES);
 }
 
+/**
+ * Start a message buffer
+ */
+void v8_MessageBegin (int msg_dest, int msg_type, const float *pOrigin, edict_t *ed) {
+	META_RES MRES = MRES_IGNORED;
+
+	Context::Scope context_scope(context);
+
+	if (cbDefines.dMessageBegin == CB_DEFINED) {
+		Handle<Object> params = Object::New(isolate);
+
+		params->Set(String::NewFromUtf8(isolate, "id"      ), Number::New(isolate, ENTINDEX(ed)));
+		params->Set(String::NewFromUtf8(isolate, "msg_dest"), Number::New(isolate, msg_dest));
+		params->Set(String::NewFromUtf8(isolate, "msg_type"), Number::New(isolate, msg_type));
+
+		MRES = v8c_UCallback("MessageBegin", params);
+	}
+
+	SET_META_RESULT(MRES);
+}
+
+/**
+ * End a message buffer
+ */
+void v8_MessageEnd (void) {
+	SET_META_RESULT(cbDefines.dMessageEnd == CB_DEFINED ? v8c_UCallback("MessageEnd") : MRES_IGNORED);
+}
+
+/**
+ * Write data to client buffer
+ */
+void v8_WriteByte (int iValue) {
+	SET_META_RESULT(cbDefines.dWriteByte == CB_DEFINED ? v8c_UCallback("WriteByte", iValue) : MRES_IGNORED);
+}
+
+/**
+ * Write data to client buffer
+ */
+void v8_WriteChar (int iValue) {
+	SET_META_RESULT(cbDefines.dWriteChar == CB_DEFINED ? v8c_UCallback("WriteChar", iValue) : MRES_IGNORED);
+}
+
+/**
+ * Write data to client buffer
+ */
+void v8_WriteShort (int iValue) {
+	SET_META_RESULT(cbDefines.dWriteShort == CB_DEFINED ? v8c_UCallback("WriteShort", iValue) : MRES_IGNORED);
+}
+
+/**
+ * Write data to client buffer
+ */
+void v8_WriteLong (int iValue) {
+	SET_META_RESULT(cbDefines.dWriteLong == CB_DEFINED ? v8c_UCallback("WriteLong", iValue) : MRES_IGNORED);
+}
+
+/**
+ * Write data to client buffer
+ */
+void v8_WriteAngle (float flValue) {
+	SET_META_RESULT(cbDefines.dWriteAngle == CB_DEFINED ? v8c_UCallback("WriteAngle", flValue) : MRES_IGNORED);
+}
+
+/**
+ * Write data to client buffer
+ */
+void v8_WriteCoord (float flValue) {
+	SET_META_RESULT(cbDefines.dWriteCoord == CB_DEFINED ? v8c_UCallback("WriteCoord", flValue) : MRES_IGNORED);
+}
+
+/**
+ * Write data to client buffer
+ */
+void v8_WriteString (const char *sz) {
+	META_RES MRES = MRES_IGNORED;
+
+	Context::Scope context_scope(context);
+
+	if (cbDefines.dWriteString == CB_DEFINED) {
+		Handle<Object> params = Object::New(isolate);
+
+		params->Set(String::NewFromUtf8(isolate, "sz"     ), String::NewFromUtf8(isolate, sz));
+
+		MRES = v8c_UCallback("WriteString", params);
+	}
+
+	SET_META_RESULT(MRES);
+}
+
+/**
+ * Write data to client buffer
+ */
+void v8_WriteEntity (int iValue) {
+	SET_META_RESULT(cbDefines.dWriteEntity == CB_DEFINED ? v8c_UCallback("WriteEntity", iValue) : MRES_IGNORED);
+}
 
 /* ================================================================== */
 /* =================== U N I M P L E M E N T E D ==================== */
@@ -1847,5 +1897,9 @@ void v8_PlaybackEvent (int flags, const edict_t *pInvoker, unsigned short eventi
 	int v8_Cmd_Argc (void) {
 		SET_META_RESULT(MRES_IGNORED);
 		return 0;
+	}
+
+	edict_t* v8_PEntityOfEntOffset (int iEntOffset) {
+		SET_META_RESULT(MRES_IGNORED);
 	}
 
