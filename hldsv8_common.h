@@ -12,7 +12,8 @@ extern void v8c_GetPlayerWONId         (const v8::FunctionCallbackInfo<v8::Value
 
 extern v8::Handle<v8::Object> v8c_Vec3tToObject(vec3_t vec);
 
-extern int      v8c_CheckCallbackIsDefined (const char *name);
-extern META_RES v8c_UCallback (const char *name, v8::Handle<v8::Object> params);
-extern META_RES v8c_UCallback (const char *name);
-extern META_RES v8c_UCallback (const char *name, int id);
+extern int                    v8c_CheckCallbackIsDefined (const char *name);
+extern v8::Handle<v8::Value>  v8c_UCallbackReturn        (const char *name, v8::Handle<v8::Object> params);
+extern META_RES               v8c_UCallback              (const char *name, v8::Handle<v8::Object> params);
+extern META_RES               v8c_UCallback              (const char *name);
+extern META_RES               v8c_UCallback              (const char *name, int id);

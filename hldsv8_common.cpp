@@ -48,7 +48,7 @@ void v8c_GetPlayerName(const v8::FunctionCallbackInfo<Value> &args) {
 	Handle<Value> result = Null(isolate);
 
 	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
-		result = String::NewFromUtf8(isolate, STRING(entities[id]->v.netname));
+		result = V8STR(STRING(entities[id]->v.netname));
 	}
 
 	args.GetReturnValue().Set(result);
@@ -65,7 +65,7 @@ void v8c_GetPlayerAuthId(const v8::FunctionCallbackInfo<Value> &args) {
 	Handle<Value> result = Null(isolate);
 
 	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
-		result = String::NewFromUtf8(isolate, g_engfuncs.pfnGetPlayerAuthId(entities[id]));
+		result = V8STR(g_engfuncs.pfnGetPlayerAuthId(entities[id]));
 	}
 
 	args.GetReturnValue().Set(result);
@@ -82,7 +82,7 @@ void v8c_GetPlayerInfoKeyBuffer(const v8::FunctionCallbackInfo<Value> &args) {
 	Handle<Value> result = Null(isolate);
 
 	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
-		result = String::NewFromUtf8(isolate, g_engfuncs.pfnGetInfoKeyBuffer(entities[id]));
+		result = V8STR(g_engfuncs.pfnGetInfoKeyBuffer(entities[id]));
 	}
 
 	args.GetReturnValue().Set(result);
@@ -99,7 +99,7 @@ void v8c_GetPlayerUserId(const v8::FunctionCallbackInfo<Value> &args) {
 	Handle<Value> result = Null(isolate);
 
 	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
-		result = Number::New(isolate, g_engfuncs.pfnGetPlayerUserId(entities[id]));
+		result = V8NUM(g_engfuncs.pfnGetPlayerUserId(entities[id]));
 	}
 
 	args.GetReturnValue().Set(result);
@@ -116,10 +116,17 @@ void v8c_GetPlayerWONId(const v8::FunctionCallbackInfo<Value> &args) {
 	Handle<Value> result = Null(isolate);
 
 	if (int id = v8c_CheckClient(args, __FUNCTION__)) {
-		result = Number::New(isolate, g_engfuncs.pfnGetPlayerWONId(entities[id]));
+		result = V8NUM(g_engfuncs.pfnGetPlayerWONId(entities[id]));
 	}
 
 	args.GetReturnValue().Set(result);
+}
+
+void v8c_RegUserMsg(const v8::FunctionCallbackInfo<Value> &args) {
+	String::Utf8Value name(args[0]->ToString());
+	int iSize = args[1]->ToInt32()->Value();
+	int msgid = g_engfuncs.pfnRegUserMsg(*name, iSize);
+	args.GetReturnValue().Set(V8NUM(msgid));
 }
 
 /**
@@ -129,10 +136,10 @@ Handle<Object> v8c_Vec3tToObject(vec3_t vec)
 {
 	Context::Scope context_scope(context);
 
-	Handle<Object> vecObj = Object::New(isolate);
-	vecObj->Set(String::NewFromUtf8(isolate, "x"), Number::New(isolate, vec[0]));
-	vecObj->Set(String::NewFromUtf8(isolate, "y"), Number::New(isolate, vec[1]));
-	vecObj->Set(String::NewFromUtf8(isolate, "z"), Number::New(isolate, vec[2]));
+	Handle<Object> vecObj = V8OBJ();
+	vecObj->Set(V8STR("x"), V8NUM(vec[0]));
+	vecObj->Set(V8STR("y"), V8NUM(vec[1]));
+	vecObj->Set(V8STR("z"), V8NUM(vec[2]));
 
 	return vecObj;
 }
@@ -150,7 +157,7 @@ int v8c_CheckCallbackIsDefined(const char *name)
 
 	Context::Scope context_scope(context);
 
-	Handle<String>   myName = String::NewFromUtf8(isolate, name);
+	Handle<String>   myName = V8STR(name);
 	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
 
 	if (fn->GetName()->ToString()->Equals(myName)) {
@@ -161,6 +168,42 @@ int v8c_CheckCallbackIsDefined(const char *name)
 	}
 
 	return result;
+}
+
+/**
+ * Universal callback with params and return value
+ *
+ * @param char*          name      function name
+ * @param int            isDefined is the callback defined in script
+ * @param Handle<Object> params    js object with arguments
+ *
+ * @return Handle<Value>
+ */
+Handle<Value> v8c_UCallbackReturn(const char *name, Handle<Object> params)
+{
+	Context::Scope context_scope(context);
+
+	Handle<Value>    callbackReturn = Null(isolate);
+	Handle<String>   myName = V8STR(name);
+	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
+
+	const int      fnArgc = 1;
+	Handle<Value>  fnArgs[fnArgc]  = { params };
+
+	Handle<Value> fnReturnValue = fn->Call(context->Global(), fnArgc, fnArgs);
+
+	int metaResult = 1;
+	if (fnReturnValue->IsInt32()) {
+		metaResult = fnReturnValue->ToInt32()->Value();
+	} else {
+		Handle<Object> fnReturnObject = Handle<Object>::Cast(fnReturnValue);
+		metaResult     = fnReturnObject->Get(V8STR("vres"))->ToInt32()->Value();
+		callbackReturn = fnReturnObject->Get(V8STR("retval"));
+	}
+	SET_META_RESULT(META_RES(metaResult ? metaResult : 1));
+
+	return callbackReturn;
+
 }
 
 /**
@@ -176,7 +219,7 @@ META_RES v8c_UCallback(const char *name, Handle<Object> params)
 {
 	Context::Scope context_scope(context);
 
-	Handle<String>   myName = String::NewFromUtf8(isolate, name);
+	Handle<String>   myName = V8STR(name);
 	Handle<Function> fn     = Handle<Function>::Cast(context->Global()->Get(myName));
 
 	const int      fnArgc = 1;
@@ -191,7 +234,7 @@ META_RES v8c_UCallback(const char *name, Handle<Object> params)
 META_RES v8c_UCallback(const char *name)
 {
 	Context::Scope context_scope(context);
-	Handle<Object> params = Object::New(isolate);
+	Handle<Object> params = V8OBJ();
 
 	return v8c_UCallback(name, params);
 }
@@ -199,8 +242,8 @@ META_RES v8c_UCallback(const char *name)
 META_RES v8c_UCallback(const char *name, int id)
 {
 	Context::Scope context_scope(context);
-	Handle<Object> params = Object::New(isolate);
-	params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, id));
+	Handle<Object> params = V8OBJ();
+	params->Set(V8STR("id"), V8NUM(id));
 
 	return v8c_UCallback(name, params);
 }
@@ -222,10 +265,9 @@ static void jsWindowObjectAccessor(Local<String> property, const PropertyCallbac
 static void jsConsolePrint(const v8::FunctionCallbackInfo<Value> &args) {
 	for (int i=0; i < args.Length(); i++) {
 		String::Utf8Value str(args[i]->ToString());
-		ALERT(at_logged, "%s", *str);
+		ALERT(at_logged, "%s\n", *str);
 	}
 
-	SERVER_PRINT("\n");
 	args.GetReturnValue().Set(Null(isolate));
 }
 
@@ -308,16 +350,18 @@ void jsInitialize()
 	Handle<ObjectTemplate> console      = ObjectTemplate::New();
 	Handle<ObjectTemplate> v8Common     = ObjectTemplate::New();
 
-	globalObject->SetAccessor(String::NewFromUtf8(isolate, "window" ), jsWindowObjectAccessor);
-	globalObject->Set        (String::NewFromUtf8(isolate, "console"), console);
-	console     ->Set        (String::NewFromUtf8(isolate, "log"    ), FunctionTemplate::New(isolate, jsConsolePrint));
+	globalObject->SetAccessor(V8STR("window" ), jsWindowObjectAccessor);
+	globalObject->Set        (V8STR("console"), console);
+	console     ->Set        (V8STR("log"    ), FunctionTemplate::New(isolate, jsConsolePrint));
 
-	globalObject->Set        (String::NewFromUtf8(isolate, "v8"), v8Common);
-	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerName"         ), FunctionTemplate::New(isolate, v8c_GetPlayerName));
-	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerUserId"       ), FunctionTemplate::New(isolate, v8c_GetPlayerUserId));
-	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerAuthId"       ), FunctionTemplate::New(isolate, v8c_GetPlayerAuthId));
-	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerInfoKeyBuffer"), FunctionTemplate::New(isolate, v8c_GetPlayerInfoKeyBuffer));
-	v8Common    ->Set        (String::NewFromUtf8(isolate, "getPlayerWONId"        ), FunctionTemplate::New(isolate, v8c_GetPlayerWONId));
+	globalObject->Set        (V8STR("v8"), v8Common);
+	v8Common    ->Set        (V8STR("getPlayerName"         ), FunctionTemplate::New(isolate, v8c_GetPlayerName));
+	v8Common    ->Set        (V8STR("getPlayerUserId"       ), FunctionTemplate::New(isolate, v8c_GetPlayerUserId));
+	v8Common    ->Set        (V8STR("getPlayerAuthId"       ), FunctionTemplate::New(isolate, v8c_GetPlayerAuthId));
+	v8Common    ->Set        (V8STR("getPlayerInfoKeyBuffer"), FunctionTemplate::New(isolate, v8c_GetPlayerInfoKeyBuffer));
+	v8Common    ->Set        (V8STR("getPlayerWONId"        ), FunctionTemplate::New(isolate, v8c_GetPlayerWONId));
+
+	v8Common    ->Set        (V8STR("regUserMsg"            ), FunctionTemplate::New(isolate, v8c_RegUserMsg));
 
 	context = Context::New(isolate, NULL, globalObject);
 	Context::Scope context_scope(context);
@@ -325,7 +369,7 @@ void jsInitialize()
 	char* scriptSource = fileReader("/home/cstrike/inst/debug/cstrike/plugins/hldsv8/scripts/test.js");
 
 	if (scriptSource != NULL) {
-		if (!ExecuteString(isolate, String::NewFromUtf8(isolate, scriptSource), String::NewFromUtf8(isolate, "test.js"), true, true)) {
+		if (!ExecuteString(isolate, V8STR(scriptSource), V8STR("test.js"), true, true)) {
 			ALERT(at_logged, "[HLDSV8] Engine Started with errors!\n");
 		}
 	} else {

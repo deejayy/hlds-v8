@@ -652,6 +652,23 @@ void v8_GameInit () {
 
 	META_RES MRES = MRES_IGNORED;
 
+	/*
+	  ==========================
+
+
+	void *handle = dlopen("/home/cstrike/inst/debug/cstrike/dlls/cs.so", RTLD_NOW|RTLD_GLOBAL);
+	void *addr = dlsym(handle, "_ZN11CBasePlayer10TakeDamageEP9entvars_sS1_fi");
+
+	if (addr != NULL) {
+		ALERT(at_logged, "dlsym: %p\n", addr);
+	} else {
+		ALERT(at_logged, "dlsym returned null\n");
+	}
+
+
+	  ==========================
+	*/
+
 	Context::Scope context_scope(context);
 
 	cbDefines.dGameInit              = v8c_CheckCallbackIsDefined("GameInit");
@@ -708,7 +725,7 @@ void v8_GameInit () {
 	cbDefines.dWriteEntity           = v8c_CheckCallbackIsDefined("WriteEntity");
 
 	if (cbDefines.dGameInit == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 		MRES = v8c_UCallback("GameInit", params);
 	}
 
@@ -748,10 +765,10 @@ qboolean v8_ClientConnect (edict_t *pEntity, const char *pszName, const char *ps
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dClientConnect == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-		params->Set(String::NewFromUtf8(isolate, "id"     ), Number::New(isolate, ENTINDEX(pEntity)));
-		params->Set(String::NewFromUtf8(isolate, "name"   ), String::NewFromUtf8(isolate, pszName));
-		params->Set(String::NewFromUtf8(isolate, "address"), String::NewFromUtf8(isolate, pszAddress));
+		Handle<Object> params = V8OBJ();
+		params->Set(V8STR("id"     ), V8NUM(ENTINDEX(pEntity)));
+		params->Set(V8STR("name"   ), V8STR(pszName));
+		params->Set(V8STR("address"), V8STR(pszAddress));
 
 		MRES = v8c_UCallback("ClientConnect", params);
 	}
@@ -774,23 +791,23 @@ void v8_CmdStart (const edict_t *player, const struct usercmd_s *cmd, unsigned i
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dCmdStart == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
 		usercmd_t *command = (usercmd_t *)cmd;
 
-		params->Set(String::NewFromUtf8(isolate, "id"              ), Number::New(isolate, ENTINDEX(player)));
-		params->Set(String::NewFromUtf8(isolate, "lerp_msec"       ), Number::New(isolate, command->lerp_msec));      // Interpolation time on client
-		params->Set(String::NewFromUtf8(isolate, "msec"            ), Number::New(isolate, command->msec));           // Duration in ms of command
-		params->Set(String::NewFromUtf8(isolate, "viewangles"      ), v8c_Vec3tToObject(command->viewangles));        // Command view angles.
-		params->Set(String::NewFromUtf8(isolate, "forwardmove"     ), Number::New(isolate, command->forwardmove));    // Forward velocity.
-		params->Set(String::NewFromUtf8(isolate, "sidemove"        ), Number::New(isolate, command->sidemove));       // Sideways velocity.
-		params->Set(String::NewFromUtf8(isolate, "upmove"          ), Number::New(isolate, command->upmove));         // Upward velocity.
-		params->Set(String::NewFromUtf8(isolate, "lightlevel"      ), Number::New(isolate, command->lightlevel));     // Light level at spot where we are standing.
-		params->Set(String::NewFromUtf8(isolate, "buttons"         ), Number::New(isolate, command->buttons));        // Attack buttons
-		params->Set(String::NewFromUtf8(isolate, "impulse"         ), Number::New(isolate, command->impulse));        // Impulse command issued.
-		params->Set(String::NewFromUtf8(isolate, "weaponselect"    ), Number::New(isolate, command->weaponselect));   // Current weapon id
-		params->Set(String::NewFromUtf8(isolate, "impact_index"    ), Number::New(isolate, command->impact_index));   // experimental
-		params->Set(String::NewFromUtf8(isolate, "impact_position" ), v8c_Vec3tToObject(command->impact_position));   // experimental
+		params->Set(V8STR("id"              ), V8NUM(ENTINDEX(player)));
+		params->Set(V8STR("lerp_msec"       ), V8NUM(command->lerp_msec));      // Interpolation time on client
+		params->Set(V8STR("msec"            ), V8NUM(command->msec));           // Duration in ms of command
+		params->Set(V8STR("viewangles"      ), v8c_Vec3tToObject(command->viewangles));        // Command view angles.
+		params->Set(V8STR("forwardmove"     ), V8NUM(command->forwardmove));    // Forward velocity.
+		params->Set(V8STR("sidemove"        ), V8NUM(command->sidemove));       // Sideways velocity.
+		params->Set(V8STR("upmove"          ), V8NUM(command->upmove));         // Upward velocity.
+		params->Set(V8STR("lightlevel"      ), V8NUM(command->lightlevel));     // Light level at spot where we are standing.
+		params->Set(V8STR("buttons"         ), V8NUM(command->buttons));        // Attack buttons
+		params->Set(V8STR("impulse"         ), V8NUM(command->impulse));        // Impulse command issued.
+		params->Set(V8STR("weaponselect"    ), V8NUM(command->weaponselect));   // Current weapon id
+		params->Set(V8STR("impact_index"    ), V8NUM(command->impact_index));   // experimental
+		params->Set(V8STR("impact_position" ), v8c_Vec3tToObject(command->impact_position));   // experimental
 
 		MRES = v8c_UCallback("CmdStart", params);
 	}
@@ -811,18 +828,18 @@ void v8_ClientCommand (edict_t *pEntity) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dClientCommand == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
+		Handle<Object> params = V8OBJ();
+		params->Set(V8STR("id"), V8NUM(ENTINDEX(pEntity)));
 
 		int argc = g_engfuncs.pfnCmd_Argc();
 		Handle<Array> argv = Array::New(isolate, argc);
 		if (argc > 1) {
-			params->Set(String::NewFromUtf8(isolate, "args"), String::NewFromUtf8(isolate, g_engfuncs.pfnCmd_Args()));
+			params->Set(V8STR("args"), V8STR(g_engfuncs.pfnCmd_Args()));
 		}
 		for (int i = 0; i < argc; i++) {
-			argv->Set(i, String::NewFromUtf8(isolate, g_engfuncs.pfnCmd_Argv(i)));
+			argv->Set(i, V8STR(g_engfuncs.pfnCmd_Argv(i)));
 		}
-		params->Set(String::NewFromUtf8(isolate, "argv"), argv);
+		params->Set(V8STR("argv"), argv);
 
 		MRES = v8c_UCallback("ClientCommand", params);
 	}
@@ -861,12 +878,12 @@ void v8_Think (edict_t *pEntity) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dThink == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
 		CBaseEntity *entity = (CBaseEntity *)GET_PRIVATE(pEntity);
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
+		params->Set(V8STR("id"), V8NUM(ENTINDEX(pEntity)));
 		if (entity) {
-			params->Set(String::NewFromUtf8(isolate, "classname"), String::NewFromUtf8(isolate, STRING(entity->pev->classname)));
+			params->Set(V8STR("classname"), V8STR(STRING(entity->pev->classname)));
 		}
 
 		MRES = v8c_UCallback("Think", params);
@@ -900,10 +917,10 @@ void v8_Touch (edict_t *pentTouched, edict_t *pentOther) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dTouch == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pentTouched)));
-		params->Set(String::NewFromUtf8(isolate, "id2"), Number::New(isolate, ENTINDEX(pentOther)));
+		params->Set(V8STR("id"), V8NUM(ENTINDEX(pentTouched)));
+		params->Set(V8STR("id2"), V8NUM(ENTINDEX(pentOther)));
 
 		MRES = v8c_UCallback("Touch", params);
 	}
@@ -962,10 +979,10 @@ void v8_ClientUserInfoChanged (edict_t *pEntity, char *infobuffer) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dClientUserInfoChanged == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEntity)));
-		params->Set(String::NewFromUtf8(isolate, "infobuffer"), String::NewFromUtf8(isolate, infobuffer));
+		params->Set(V8STR("id"), V8NUM(ENTINDEX(pEntity)));
+		params->Set(V8STR("infobuffer"), V8STR(infobuffer));
 
 		MRES = v8c_UCallback("ClientUserInfoChanged", params);
 	}
@@ -982,12 +999,12 @@ void v8_CVarRegister (cvar_t *pCvar) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dCVarRegister == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "name"  ), String::NewFromUtf8(isolate, pCvar->name));
-		params->Set(String::NewFromUtf8(isolate, "string"), String::NewFromUtf8(isolate, pCvar->string));
-		params->Set(String::NewFromUtf8(isolate, "flags" ), Number::New(isolate, pCvar->flags));
-		params->Set(String::NewFromUtf8(isolate, "value" ), Number::New(isolate, pCvar->value));
+		params->Set(V8STR("name"  ), V8STR(pCvar->name));
+		params->Set(V8STR("string"), V8STR(pCvar->string));
+		params->Set(V8STR("flags" ), V8NUM(pCvar->flags));
+		params->Set(V8STR("value" ), V8NUM(pCvar->value));
 
 		MRES = v8c_UCallback("CVarRegister", params);
 	}
@@ -1001,9 +1018,9 @@ float v8_CVarGetFloat (const char *szVarName) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dCVarGetFloat == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "varName"), String::NewFromUtf8(isolate, szVarName));
+		params->Set(V8STR("varName"), V8STR(szVarName));
 
 		MRES = v8c_UCallback("CVarGetFloat", params);
 	}
@@ -1018,9 +1035,9 @@ const char* v8_CVarGetString (const char *szVarName) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dCVarGetString == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "varName"), String::NewFromUtf8(isolate, szVarName));
+		params->Set(V8STR("varName"), V8STR(szVarName));
 
 		MRES = v8c_UCallback("CVarGetString", params);
 	}
@@ -1034,10 +1051,10 @@ void v8_CVarSetFloat (const char *szVarName, float flValue) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dCVarSetFloat == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "varName"), String::NewFromUtf8(isolate, szVarName));
-		params->Set(String::NewFromUtf8(isolate, "value"), Number::New(isolate, flValue));
+		params->Set(V8STR("varName"), V8STR(szVarName));
+		params->Set(V8STR("value"), V8NUM(flValue));
 
 		MRES = v8c_UCallback("CVarSetFloat", params);
 	}
@@ -1051,10 +1068,10 @@ void v8_CVarSetString (const char *szVarName, const char *szValue) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dCVarSetString == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "varName"), String::NewFromUtf8(isolate, szVarName));
-		params->Set(String::NewFromUtf8(isolate, "value"), String::NewFromUtf8(isolate, szValue));
+		params->Set(V8STR("varName"), V8STR(szVarName));
+		params->Set(V8STR("value"), V8STR(szValue));
 
 		MRES = v8c_UCallback("CVarSetString", params);
 	}
@@ -1068,9 +1085,9 @@ cvar_t  * v8_CVarGetPointer (const char *szVarName) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dCVarGetPointer == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "varName"), String::NewFromUtf8(isolate, szVarName));
+		params->Set(V8STR("varName"), V8STR(szVarName));
 
 		MRES = v8c_UCallback("CVarGetPointer", params);
 	}
@@ -1084,7 +1101,7 @@ void v8_AlertMessage (ALERT_TYPE atype, char *szFmt, ...) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dAlertMessage == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
 		va_list			argptr;
 		static char		string[1024];
@@ -1093,8 +1110,8 @@ void v8_AlertMessage (ALERT_TYPE atype, char *szFmt, ...) {
 		vsnprintf(string, sizeof(string), szFmt, argptr);
 		va_end   (argptr);
 
-		params->Set(String::NewFromUtf8(isolate, "string"), String::NewFromUtf8(isolate, string));
-		params->Set(String::NewFromUtf8(isolate, "atype"), Number::New(isolate, int(atype)));
+		params->Set(V8STR("string"), V8STR(string));
+		params->Set(V8STR("atype"), V8NUM(int(atype)));
 
 		MRES = v8c_UCallback("AlertMessage", params);
 	}
@@ -1111,9 +1128,9 @@ int v8_AllocString (const char *szValue) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dAllocString == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "value"), String::NewFromUtf8(isolate, szValue));
+		params->Set(V8STR("value"), V8STR(szValue));
 
 		MRES = v8c_UCallback("AllocString", params);
 	}
@@ -1131,9 +1148,9 @@ void v8_ServerCommand (char* str) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dServerCommand == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "str"), String::NewFromUtf8(isolate, str));
+		params->Set(V8STR("str"), V8STR(str));
 
 		MRES = v8c_UCallback("ServerCommand", params);
 	}
@@ -1145,21 +1162,21 @@ void v8_ServerCommand (char* str) {
  *
  */
 int v8_RegUserMsg (const char *pszName, int iSize) {
-	META_RES MRES = MRES_IGNORED;
+	SET_META_RESULT(MRES_IGNORED);
+	int ret = 0;
 
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dRegUserMsg == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, pszName));
-		params->Set(String::NewFromUtf8(isolate, "size"), Number::New(isolate, iSize));
+		params->Set(V8STR("name"), V8STR(pszName));
+		params->Set(V8STR("size"), V8NUM(iSize));
 
-		MRES = v8c_UCallback("RegUserMsg", params);
+		ret = v8c_UCallbackReturn("RegUserMsg", params)->ToInt32()->Value();
 	}
 
-	SET_META_RESULT(MRES);
-	return 0;
+	return ret;
 }
 
 /**
@@ -1171,9 +1188,9 @@ byte * v8_LoadFileForMe (char *filename, int *pLength) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dLoadFileForMe == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "filename"), String::NewFromUtf8(isolate, filename));
+		params->Set(V8STR("filename"), V8STR(filename));
 
 		MRES = v8c_UCallback("LoadFileForMe", params);
 	}
@@ -1188,9 +1205,9 @@ void v8_AddServerCommand (char *cmd_name, void (*function) (void)) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dAddServerCommand == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "cmd_name"), String::NewFromUtf8(isolate, cmd_name));
+		params->Set(V8STR("cmd_name"), V8STR(cmd_name));
 
 		MRES = v8c_UCallback("AddServerCommand", params);
 	}
@@ -1204,10 +1221,10 @@ char* v8_InfoKeyValue (char *infobuffer, char *key) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dInfoKeyValue == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "infobuffer"), String::NewFromUtf8(isolate, infobuffer));
-		params->Set(String::NewFromUtf8(isolate, "key"), String::NewFromUtf8(isolate, key));
+		params->Set(V8STR("infobuffer"), V8STR(infobuffer));
+		params->Set(V8STR("key"), V8STR(key));
 
 		MRES = v8c_UCallback("InfoKeyValue", params);
 	}
@@ -1221,11 +1238,11 @@ void v8_SetKeyValue (char *infobuffer, char *key, char *value) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dSetKeyValue == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "infobuffer"), String::NewFromUtf8(isolate, infobuffer));
-		params->Set(String::NewFromUtf8(isolate, "key"), String::NewFromUtf8(isolate, key));
-		params->Set(String::NewFromUtf8(isolate, "value"), String::NewFromUtf8(isolate, value));
+		params->Set(V8STR("infobuffer"), V8STR(infobuffer));
+		params->Set(V8STR("key"), V8STR(key));
+		params->Set(V8STR("value"), V8STR(value));
 
 		MRES = v8c_UCallback("SetKeyValue", params);
 	}
@@ -1239,12 +1256,12 @@ void v8_SetClientKeyValue (int clientIndex, char *infobuffer, char *key, char *v
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dSetClientKeyValue == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "index"), Number::New(isolate, clientIndex));
-		params->Set(String::NewFromUtf8(isolate, "infobuffer"), String::NewFromUtf8(isolate, infobuffer));
-		params->Set(String::NewFromUtf8(isolate, "key"), String::NewFromUtf8(isolate, key));
-		params->Set(String::NewFromUtf8(isolate, "value"), String::NewFromUtf8(isolate, value));
+		params->Set(V8STR("index"), V8NUM(clientIndex));
+		params->Set(V8STR("infobuffer"), V8STR(infobuffer));
+		params->Set(V8STR("key"), V8STR(key));
+		params->Set(V8STR("value"), V8STR(value));
 
 		MRES = v8c_UCallback("SetClientKeyValue", params);
 	}
@@ -1258,10 +1275,10 @@ void v8_Info_RemoveKey (char *s, const char *key) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dInfo_RemoveKey == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "s"), String::NewFromUtf8(isolate, s));
-		params->Set(String::NewFromUtf8(isolate, "key"), String::NewFromUtf8(isolate, key));
+		params->Set(V8STR("s"), V8STR(s));
+		params->Set(V8STR("key"), V8STR(key));
 
 		MRES = v8c_UCallback("Info_RemoveKey", params);
 	}
@@ -1275,10 +1292,10 @@ const char * v8_GetPhysicsKeyValue (const edict_t *pClient, const char *key) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dGetPhysicsKeyValue == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pClient)));
-		params->Set(String::NewFromUtf8(isolate, "key"), String::NewFromUtf8(isolate, key));
+		params->Set(V8STR("id"), V8NUM(ENTINDEX(pClient)));
+		params->Set(V8STR("key"), V8STR(key));
 
 		MRES = v8c_UCallback("GetPhysicsKeyValue", params);
 	}
@@ -1292,11 +1309,11 @@ void v8_SetPhysicsKeyValue (const edict_t *pClient, const char *key, const char 
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dSetPhysicsKeyValue == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pClient)));
-		params->Set(String::NewFromUtf8(isolate, "key"), String::NewFromUtf8(isolate, key));
-		params->Set(String::NewFromUtf8(isolate, "value"), String::NewFromUtf8(isolate, value));
+		params->Set(V8STR("id"), V8NUM(ENTINDEX(pClient)));
+		params->Set(V8STR("key"), V8STR(key));
+		params->Set(V8STR("value"), V8STR(value));
 
 		MRES = v8c_UCallback("SetPhysicsKeyValue", params);
 	}
@@ -1318,11 +1335,11 @@ edict_t* v8_FindEntityByString (edict_t *pEdictStartSearchAfter, const char *psz
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dFindEntityByString == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "id"), Number::New(isolate, ENTINDEX(pEdictStartSearchAfter)));
-		params->Set(String::NewFromUtf8(isolate, "field"), String::NewFromUtf8(isolate, pszField));
-		params->Set(String::NewFromUtf8(isolate, "value"), String::NewFromUtf8(isolate, pszValue));
+		params->Set(V8STR("id"), V8NUM(ENTINDEX(pEdictStartSearchAfter)));
+		params->Set(V8STR("field"), V8STR(pszField));
+		params->Set(V8STR("value"), V8STR(pszValue));
 
 		MRES = v8c_UCallback("FindEntityByString", params);
 	}
@@ -1336,15 +1353,15 @@ void v8_EmitSound (edict_t *entity, int channel, const char *sample, /*int*/floa
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dEmitSound == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "id"         ), Number::New(isolate, ENTINDEX(entity)));
-		params->Set(String::NewFromUtf8(isolate, "channel"    ), Number::New(isolate, channel));
-		params->Set(String::NewFromUtf8(isolate, "sample"     ), String::NewFromUtf8(isolate, sample));
-		params->Set(String::NewFromUtf8(isolate, "volume"     ), Number::New(isolate, volume));
-		params->Set(String::NewFromUtf8(isolate, "attenuation"), Number::New(isolate, attenuation));
-		params->Set(String::NewFromUtf8(isolate, "fFlags"     ), Number::New(isolate, fFlags));
-		params->Set(String::NewFromUtf8(isolate, "pitch"      ), Number::New(isolate, pitch));
+		params->Set(V8STR("id"         ), V8NUM(ENTINDEX(entity)));
+		params->Set(V8STR("channel"    ), V8NUM(channel));
+		params->Set(V8STR("sample"     ), V8STR(sample));
+		params->Set(V8STR("volume"     ), V8NUM(volume));
+		params->Set(V8STR("attenuation"), V8NUM(attenuation));
+		params->Set(V8STR("fFlags"     ), V8NUM(fFlags));
+		params->Set(V8STR("pitch"      ), V8NUM(pitch));
 
 		MRES = v8c_UCallback("EmitSound", params);
 	}
@@ -1358,18 +1375,18 @@ void v8_PlaybackEvent (int flags, const edict_t *pInvoker, unsigned short eventi
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dPlaybackEvent == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "id"         ), Number::New(isolate, ENTINDEX(pInvoker)));
-		params->Set(String::NewFromUtf8(isolate, "flags"      ), Number::New(isolate, flags));
-		params->Set(String::NewFromUtf8(isolate, "eventindex" ), Number::New(isolate, eventindex));
-		params->Set(String::NewFromUtf8(isolate, "delay"      ), Number::New(isolate, delay));
-		params->Set(String::NewFromUtf8(isolate, "fparam1"    ), Number::New(isolate, fparam1));
-		params->Set(String::NewFromUtf8(isolate, "fparam2"    ), Number::New(isolate, fparam2));
-		params->Set(String::NewFromUtf8(isolate, "iparam1"    ), Number::New(isolate, iparam1));
-		params->Set(String::NewFromUtf8(isolate, "iparam2"    ), Number::New(isolate, iparam2));
-		params->Set(String::NewFromUtf8(isolate, "bparam1"    ), Number::New(isolate, bparam1));
-		params->Set(String::NewFromUtf8(isolate, "bparam2"    ), Number::New(isolate, bparam2));
+		params->Set(V8STR("id"         ), V8NUM(ENTINDEX(pInvoker)));
+		params->Set(V8STR("flags"      ), V8NUM(flags));
+		params->Set(V8STR("eventindex" ), V8NUM(eventindex));
+		params->Set(V8STR("delay"      ), V8NUM(delay));
+		params->Set(V8STR("fparam1"    ), V8NUM(fparam1));
+		params->Set(V8STR("fparam2"    ), V8NUM(fparam2));
+		params->Set(V8STR("iparam1"    ), V8NUM(iparam1));
+		params->Set(V8STR("iparam2"    ), V8NUM(iparam2));
+		params->Set(V8STR("bparam1"    ), V8NUM(bparam1));
+		params->Set(V8STR("bparam2"    ), V8NUM(bparam2));
 
 		MRES = v8c_UCallback("PlaybackEvent", params);
 	}
@@ -1386,11 +1403,11 @@ void v8_MessageBegin (int msg_dest, int msg_type, const float *pOrigin, edict_t 
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dMessageBegin == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "id"      ), Number::New(isolate, ENTINDEX(ed)));
-		params->Set(String::NewFromUtf8(isolate, "msg_dest"), Number::New(isolate, msg_dest));
-		params->Set(String::NewFromUtf8(isolate, "msg_type"), Number::New(isolate, msg_type));
+		params->Set(V8STR("id"      ), V8NUM(ENTINDEX(ed)));
+		params->Set(V8STR("msg_dest"), V8NUM(msg_dest));
+		params->Set(V8STR("msg_type"), V8NUM(msg_type));
 
 		MRES = v8c_UCallback("MessageBegin", params);
 	}
@@ -1456,9 +1473,9 @@ void v8_WriteString (const char *sz) {
 	Context::Scope context_scope(context);
 
 	if (cbDefines.dWriteString == CB_DEFINED) {
-		Handle<Object> params = Object::New(isolate);
+		Handle<Object> params = V8OBJ();
 
-		params->Set(String::NewFromUtf8(isolate, "sz"     ), String::NewFromUtf8(isolate, sz));
+		params->Set(V8STR("sz"     ), V8STR(sz));
 
 		MRES = v8c_UCallback("WriteString", params);
 	}
