@@ -42,7 +42,7 @@ Copy ```libv8.so``` from ```v8/out/ia32.release/obj.target/tools/gyp``` to one o
 
 Copy (or symlink) ```hldsv8_i386.so``` to ```cstrike/addons/hldsv8/``` directory and append the following line to the ```cstrike/addons/metamod/plugins.ini``` file:
 
-    linux plugins/hldsv8/hldsv8_i386.so v8
+    linux addons/hldsv8/hldsv8_i386.so v8
 
 Run hlds as usual.
 
